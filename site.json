@@ -1,129 +1,249 @@
 {
   "_help": "Everything on the website comes from this file. Edit it, then run `node build.mjs` (or push: GitHub Pages rebuilds the site). Empty links are left out. Fields marked TODO are placeholders and are hidden until you fill them in. For a release player, paste a Spotify, YouTube, SoundCloud or Apple Music share link (or a Bandcamp EmbeddedPlayer link) into embed.",
-
   "site": {
     "url": "",
-    "title": "Your Artist Name",
-    "description": "Music, releases and PromptMIDI, the plug-in that turns words into MIDI.",
+    "title": "Tobias Lauritsen · Orchestral composer",
+    "description": "Tobias Lauritsen, orchestral composer from Denmark: music, videos, and PromptMIDI, the free plug-in that turns words into MIDI.",
     "language": "en",
     "accent": "#7d6ff7"
   },
-
   "artist": {
-    "name": "Your Artist Name",
-    "tagline": "Composer and producer. Maker of PromptMIDI.",
-    "intro": "TODO: one or two sentences that say what your music sounds like and what you make.",
+    "name": "Tobias Lauritsen",
+    "tagline": "Orchestral composer from Denmark.",
+    "intro": "Orchestral music on YouTube, and PromptMIDI: a free plug-in that turns a description in words into MIDI.",
     "photo": "",
-    "location": "",
+    "location": "Denmark",
     "bio": [
-      "TODO: a short bio, in a few paragraphs. Where you're from, what you make, who you've worked with, what you're working on now.",
-      "TODO: tip: write it in the third person if press will quote it, in the first person if it is for fans."
+      "Tobias Lauritsen is an orchestral composer from Denmark.",
+      "He also makes PromptMIDI, a free plug-in that writes orchestral cues and other MIDI from a description in words."
     ]
   },
-
   "contact": {
-    "email": "",
+    "email": "tlcomposer@gmail.com",
     "note": "Bookings, collaborations, licensing and press."
   },
-
   "socials": [
-    { "platform": "spotify", "url": "" },
-    { "platform": "applemusic", "url": "" },
-    { "platform": "soundcloud", "url": "" },
-    { "platform": "youtube", "url": "" },
-    { "platform": "bandcamp", "url": "" },
-    { "platform": "instagram", "url": "" },
-    { "platform": "tiktok", "url": "" },
-    { "platform": "x", "url": "" },
-    { "platform": "threads", "url": "" },
-    { "platform": "bluesky", "url": "" },
-    { "platform": "discord", "url": "" },
-    { "platform": "twitch", "url": "" },
-    { "platform": "patreon", "url": "" },
-    { "platform": "github", "url": "https://github.com/BecomeDeath" }
+    {
+      "platform": "spotify",
+      "url": ""
+    },
+    {
+      "platform": "applemusic",
+      "url": ""
+    },
+    {
+      "platform": "soundcloud",
+      "url": ""
+    },
+    {
+      "platform": "youtube",
+      "url": "https://www.youtube.com/@TLComposer"
+    },
+    {
+      "platform": "bandcamp",
+      "url": ""
+    },
+    {
+      "platform": "instagram",
+      "url": ""
+    },
+    {
+      "platform": "tiktok",
+      "url": "https://www.tiktok.com/@nexarothpandemoni"
+    },
+    {
+      "platform": "x",
+      "url": ""
+    },
+    {
+      "platform": "threads",
+      "url": ""
+    },
+    {
+      "platform": "bluesky",
+      "url": ""
+    },
+    {
+      "platform": "discord",
+      "url": ""
+    },
+    {
+      "platform": "twitch",
+      "url": ""
+    },
+    {
+      "platform": "patreon",
+      "url": ""
+    },
+    {
+      "platform": "github",
+      "url": "https://github.com/BecomeDeath"
+    }
   ],
-
   "music": {
     "heading": "Music",
-    "intro": "TODO: a line about your releases.",
+    "intro": "Original pieces and orchestral arrangements. More on YouTube.",
+    "coverShape": "wide",
     "releases": [
       {
-        "title": "TODO: Latest release",
-        "type": "Single",
-        "date": "2026",
-        "cover": "",
+        "title": "Horizon Dawn",
+        "type": "Heroic fantasy",
+        "date": "",
+        "cover": "assets/img/horizon-dawn.jpg",
         "featured": true,
-        "description": "TODO: a sentence about this release.",
-        "embed": "",
-        "links": { "spotify": "", "applemusic": "", "youtube": "", "soundcloud": "", "bandcamp": "" }
+        "description": "",
+        "embed": "https://www.youtube.com/watch?v=FV67k9f_Op8",
+        "links": {
+          "youtube": "https://www.youtube.com/watch?v=FV67k9f_Op8"
+        }
       },
       {
-        "title": "TODO: Earlier release",
-        "type": "EP",
-        "date": "2025",
-        "cover": "",
+        "title": "Tell me. For whom do you fight?",
+        "type": "",
+        "date": "",
+        "cover": "assets/img/for-whom-do-you-fight.jpg",
         "description": "",
-        "embed": "",
-        "links": { "spotify": "", "applemusic": "", "youtube": "" }
+        "embed": "https://www.youtube.com/watch?v=JpYpP9XghGk",
+        "links": {
+          "youtube": "https://www.youtube.com/watch?v=JpYpP9XghGk"
+        }
       },
       {
-        "title": "TODO: Another release",
-        "type": "Single",
-        "date": "2025",
-        "cover": "",
-        "description": "",
-        "embed": "",
-        "links": { "spotify": "" }
+        "title": "Gerudo Valley (orchestral remix)",
+        "type": "Remix",
+        "date": "",
+        "cover": "assets/img/gerudo-valley.jpg",
+        "description": "An orchestral arrangement of Gerudo Valley from The Legend of Zelda (original music by Koji Kondo).",
+        "embed": "https://www.youtube.com/watch?v=SL0-T907ojM",
+        "links": {
+          "youtube": "https://www.youtube.com/watch?v=SL0-T907ojM"
+        }
       }
     ]
   },
-
   "promptmidi": {
     "name": "PromptMIDI",
     "tagline": "Describe the music in words. Get multi-track MIDI.",
     "summary": "A VST3 instrument plug-in (with AU on macOS and a standalone app) with a prompt window: type \"Generate me a fantasy orchestral midi\" or \"Make me a soft piano midi\", press Generate, and drag the result into your DAW.",
     "repo": "https://github.com/BecomeDeath/PromptMIDI",
     "downloads": [
-      { "label": "Windows", "detail": "VST3 + standalone", "url": "https://github.com/BecomeDeath/PromptMIDI/releases/latest" },
-      { "label": "macOS", "detail": "VST3, AU + standalone (Universal)", "url": "https://github.com/BecomeDeath/PromptMIDI/releases/latest" },
-      { "label": "Linux", "detail": "VST3 + standalone", "url": "https://github.com/BecomeDeath/PromptMIDI/releases/latest" }
+      {
+        "label": "Windows",
+        "detail": "VST3 + standalone",
+        "url": "https://github.com/BecomeDeath/PromptMIDI/releases/latest"
+      },
+      {
+        "label": "macOS",
+        "detail": "VST3, AU + standalone (Universal)",
+        "url": "https://github.com/BecomeDeath/PromptMIDI/releases/latest"
+      },
+      {
+        "label": "Linux",
+        "detail": "VST3 + standalone",
+        "url": "https://github.com/BecomeDeath/PromptMIDI/releases/latest"
+      }
     ],
     "features": [
-      { "title": "Words in, MIDI out", "text": "Genre, mood, instruments, key, tempo, length and meter in plain English. Offline and instant, or planned by Claude AI with your own API key." },
-      { "title": "It does what you asked", "text": "Every prompt becomes a checklist: only piano, a jazz trio, the sax takes the melody, no drums, D minor, 30 seconds. Every draft is checked against it." },
-      { "title": "New music every time", "text": "Themes, rhythm and harmony come from statistics learned from 28,000 pieces, never from stored melodies, and every tune is checked to be original." },
-      { "title": "Orchestral cues", "text": "Two-to-four-minute game and film cues with an intro, themes, development, a build, a climax and loop points, for a full orchestra in score order." },
-      { "title": "A DAW-style editor", "text": "Scroll and zoom through the piece, edit notes with undo, keep every take, save presets, import MIDI files, and hear it all through real instrument samples." },
-      { "title": "Straight into your DAW", "text": "Drag the whole piece or one track onto your timeline, or export a .mid with named tracks, markers and keyswitch or UACC articulations." }
+      {
+        "title": "Words in, MIDI out",
+        "text": "Genre, mood, instruments, key, tempo, length and meter in plain English. Offline and instant, or planned by Claude AI with your own API key."
+      },
+      {
+        "title": "It does what you asked",
+        "text": "Every prompt becomes a checklist: only piano, a jazz trio, the sax takes the melody, no drums, D minor, 30 seconds. Every draft is checked against it."
+      },
+      {
+        "title": "New music every time",
+        "text": "Themes, rhythm and harmony come from statistics learned from 28,000 pieces, never from stored melodies, and every tune is checked to be original."
+      },
+      {
+        "title": "Orchestral cues",
+        "text": "Two-to-four-minute game and film cues with an intro, themes, development, a build, a climax and loop points, for a full orchestra in score order."
+      },
+      {
+        "title": "A DAW-style editor",
+        "text": "Scroll and zoom through the piece, edit notes with undo, keep every take, save presets, import MIDI files, and hear it all through real instrument samples."
+      },
+      {
+        "title": "Straight into your DAW",
+        "text": "Drag the whole piece or one track onto your timeline, or export a .mid with named tracks, markers and keyswitch or UACC articulations."
+      }
     ],
     "examples": [
-      { "title": "Fantasy orchestral", "prompt": "Generate me a fantasy orchestral midi", "file": "assets/audio/fantasy-orchestral.mp3" },
-      { "title": "Boss battle", "prompt": "Epic orchestral battle music for a boss fight", "file": "assets/audio/boss-battle.mp3" },
-      { "title": "Soft piano", "prompt": "Make me a soft piano midi", "file": "assets/audio/soft-piano.mp3" },
-      { "title": "String quartet", "prompt": "String quartet in G major", "file": "assets/audio/string-quartet.mp3" },
-      { "title": "Late-night jazz", "prompt": "Late night jazz combo with a tenor sax lead", "file": "assets/audio/jazz-tenor-sax.mp3" },
-      { "title": "Lo-fi", "prompt": "Lo-fi hip hop beat with a mellow electric piano, rainy night", "file": "assets/audio/lofi.mp3" }
+      {
+        "title": "Fantasy orchestral",
+        "prompt": "Generate me a fantasy orchestral midi",
+        "file": "assets/audio/fantasy-orchestral.mp3"
+      },
+      {
+        "title": "Boss battle",
+        "prompt": "Epic orchestral battle music for a boss fight",
+        "file": "assets/audio/boss-battle.mp3"
+      },
+      {
+        "title": "Soft piano",
+        "prompt": "Make me a soft piano midi",
+        "file": "assets/audio/soft-piano.mp3"
+      },
+      {
+        "title": "String quartet",
+        "prompt": "String quartet in G major",
+        "file": "assets/audio/string-quartet.mp3"
+      },
+      {
+        "title": "Late-night jazz",
+        "prompt": "Late night jazz combo with a tenor sax lead",
+        "file": "assets/audio/jazz-tenor-sax.mp3"
+      },
+      {
+        "title": "Lo-fi",
+        "prompt": "Lo-fi hip hop beat with a mellow electric piano, rainy night",
+        "file": "assets/audio/lofi.mp3"
+      }
     ],
     "examplesNote": "Rendered with PromptMIDI's built-in preview instruments, straight from the plug-in. In your DAW the MIDI plays through your own sample libraries.",
     "steps": [
-      { "title": "Describe it", "text": "Type what you want to hear, pick an example, or choose the instruments yourself." },
-      { "title": "Shape it", "text": "Change key, tempo, length and instruments; press Variation for a new take; edit any note." },
-      { "title": "Drag it out", "text": "Drop the MIDI on your DAW's timeline, one track or all of them, and play it with your own sounds." }
+      {
+        "title": "Describe it",
+        "text": "Type what you want to hear, pick an example, or choose the instruments yourself."
+      },
+      {
+        "title": "Shape it",
+        "text": "Change key, tempo, length and instruments; press Variation for a new take; edit any note."
+      },
+      {
+        "title": "Drag it out",
+        "text": "Drop the MIDI on your DAW's timeline, one track or all of them, and play it with your own sounds."
+      }
     ],
     "requirements": "Windows 10 or later, macOS 11 or later (Apple silicon and Intel), or Linux (x86-64). Any VST3 host; AU hosts on macOS. Claude AI mode needs an Anthropic API key.",
     "faq": [
-      { "q": "Is it free?", "a": "Yes. Claude AI mode is optional and uses your own Anthropic API key, billed to your account." },
-      { "q": "Does it copy existing songs?", "a": "No. It stores only statistics (how melodies move, common rhythms and chord progressions), never a melody or a piece, and every generated tune is checked against fingerprints of its reference corpus." },
-      { "q": "Which DAWs does it work with?", "a": "Any DAW that loads VST3 (or AU on macOS): Ableton Live, Logic, FL Studio, Cubase, Studio One, Reaper, Bitwig and more. Drag and drop works everywhere." },
-      { "q": "Can I hear the result before I export it?", "a": "Yes: the preview plays the piece through real instrument samples inside the plug-in. It stays silent while your DAW plays, so after you drag the MIDI out you only hear your own track." }
+      {
+        "q": "Is it free?",
+        "a": "Yes. Claude AI mode is optional and uses your own Anthropic API key, billed to your account."
+      },
+      {
+        "q": "Does it copy existing songs?",
+        "a": "No. It stores only statistics (how melodies move, common rhythms and chord progressions), never a melody or a piece, and every generated tune is checked against fingerprints of its reference corpus."
+      },
+      {
+        "q": "Which DAWs does it work with?",
+        "a": "Any DAW that loads VST3 (or AU on macOS): Ableton Live, Logic, FL Studio, Cubase, Studio One, Reaper, Bitwig and more. Drag and drop works everywhere."
+      },
+      {
+        "q": "Can I hear the result before I export it?",
+        "a": "Yes: the preview plays the piece through real instrument samples inside the plug-in. It stays silent while your DAW plays, so after you drag the MIDI out you only hear your own track."
+      }
     ]
   },
-
   "links": {
     "heading": "Links",
     "intro": "Everything in one place.",
     "extra": [
-      { "label": "PromptMIDI plug-in (free)", "url": "promptmidi.html" }
+      {
+        "label": "PromptMIDI plug-in (free)",
+        "url": "promptmidi.html"
+      }
     ]
   }
 }

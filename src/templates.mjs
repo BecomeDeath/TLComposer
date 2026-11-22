@@ -63,8 +63,29 @@ function initials(name) {
 }
 
 function cover(release, cls = "cover") {
-  if (safeUrl(release.cover)) return `<img class="${cls}" src="${esc(safeUrl(release.cover))}" alt="${esc(release.title)} cover art" loading="lazy" width="600" height="600">`;
-  return `<div class="${cls} cover-placeholder" aria-hidden="true"><span>${esc(initials(text(release.title, "New release")))}</span></div>`;
+  const c = release.wide ? `${cls} wide` : cls;
+  const [w, h] = release.wide ? [1280, 720] : [600, 600];
+  if (safeUrl(release.cover)) return `<img class="${c}" src="${esc(safeUrl(release.cover))}" alt="${esc(release.title)}" loading="lazy" width="${w}" height="${h}">`;
+  return `<div class="${c} cover-placeholder" aria-hidden="true"><span>${esc(initials(text(release.title, "New release")))}</span></div>`;
+}
+
+/** A video's thumbnail that turns into its player when clicked (nothing loads from YouTube before that). */
+function videoFacade(release) {
+  const e = release.embedResolved;
+  if (!e || e.label !== "YouTube" || !safeUrl(release.cover)) return "";
+  return `<div class="embed video-facade" data-src="${esc(e.src)}" data-height="0" data-title="${esc(text(release.title, "Video"))}">
+    <button class="embed-load cover-button" type="button" aria-label="Play ${esc(text(release.title, "the video"))}">
+      ${cover({ ...release, wide: true })}
+      <span class="play-badge">${icon.play}</span>
+    </button>
+  </div>`;
+}
+
+/** An email link that spam harvesters can't read in the page source (main.js assembles it). */
+function emailLink(email, cls, inner) {
+  const [user, domain] = String(email).split("@");
+  if (!user || !domain) return "";
+  return `<a class="${cls} email-link" href="#contact" data-u="${esc(user)}" data-d="${esc(domain)}">${inner(`<span class="email-text">${esc(user)} [at] ${esc(domain)}</span>`)}</a>`;
 }
 
 /** A player that loads the provider's embed only when asked (no tracking until then). */
@@ -120,7 +141,7 @@ function footer(site) {
     <ul class="footer-links">
       <li><a href="promptmidi.html">PromptMIDI</a></li>
       <li><a href="links.html">Links</a></li>
-      ${safeUrl(site.contact.email) ? `<li><a href="mailto:${esc(site.contact.email)}">Email</a></li>` : ""}
+      ${site.contact.email ? `<li>${emailLink(site.contact.email, "", () => "Email")}</li>` : ""}
     </ul>
   </div>
 </footer>`;
@@ -190,7 +211,7 @@ export function homePage(site) {
     </div>
     ${featured ? `<a class="hero-release" href="#music">
       ${cover(featured, "cover")}
-      <span class="hero-release-meta"><span class="eyebrow">Latest ${esc((featured.type || "release").toLowerCase())}</span><strong>${esc(text(featured.title, "New release"))}</strong></span>
+      <span class="hero-release-meta"><span class="eyebrow">Latest release</span><strong>${esc(text(featured.title, "New release"))}</strong></span>
     </a>` : ""}
   </div>
 </section>
@@ -201,23 +222,23 @@ export function homePage(site) {
       <h2 id="music-h">${esc(m.heading || "Music")}</h2>
       ${text(m.intro) ? `<p class="muted">${esc(m.intro)}</p>` : ""}
     </div>
-    ${featured ? `<article class="feature">
-      ${cover(featured, "cover feature-cover")}
+    ${featured ? `<article class="feature${featured.wide ? " feature-wide" : ""}">
+      ${videoFacade(featured) || cover(featured, "cover feature-cover")}
       <div class="feature-body">
-        <p class="eyebrow">${esc([featured.type, featured.date].filter(Boolean).join(" · "))}</p>
+        ${[featured.type, featured.date].filter(Boolean).length ? `<p class="eyebrow">${esc([featured.type, featured.date].filter(Boolean).join(" · "))}</p>` : ""}
         <h3>${esc(text(featured.title, "New release"))}</h3>
         ${text(featured.description) ? `<p>${esc(featured.description)}</p>` : ""}
-        ${embed(featured)}
+        ${videoFacade(featured) ? "" : embed(featured)}
         ${releaseLinks(featured)}
       </div>
     </article>` : ""}
-    ${others.length ? `<ul class="release-grid">${others.map((r) => `<li class="release">
-      ${cover(r)}
+    ${others.length ? `<ul class="release-grid${others.some((r) => r.wide) ? " release-grid-wide" : ""}">${others.map((r) => `<li class="release">
+      ${videoFacade(r) || cover(r)}
       <div class="release-body">
-        <p class="eyebrow">${esc([r.type, r.date].filter(Boolean).join(" · "))}</p>
+        ${[r.type, r.date].filter(Boolean).length ? `<p class="eyebrow">${esc([r.type, r.date].filter(Boolean).join(" · "))}</p>` : ""}
         <h3>${esc(text(r.title, "Release"))}</h3>
         ${text(r.description) ? `<p class="muted">${esc(r.description)}</p>` : ""}
-        ${embed(r)}
+        ${videoFacade(r) ? "" : embed(r)}
         ${releaseLinks(r)}
       </div>
     </li>`).join("")}</ul>` : ""}
@@ -258,7 +279,7 @@ export function homePage(site) {
       <p class="lead">${esc(site.contact.note)}</p>
     </div>
     <div class="contact-actions">
-      ${safeUrl(email ? "mailto:" + email : "") ? `<a class="button primary" href="mailto:${esc(email)}">${icon.mail}<span>${esc(email)}</span></a>` : ""}
+      ${email ? emailLink(email, "button primary", (t) => `${icon.mail}${t}`) : ""}
       ${socialLinks(site, "socials socials-large")}
     </div>
   </div>
@@ -273,8 +294,9 @@ export function homePage(site) {
     image: "assets/promptmidi/screenshot.png",
     jsonLd: {
       "@context": "https://schema.org",
-      "@type": "MusicGroup",
+      "@type": "Person",
       name: a.name,
+      jobTitle: "Composer",
       description: site.site.description,
       ...(site.site.url ? { url: site.site.url } : {}),
       sameAs: site.socials.map((s) => safeUrl(s.url)).filter((u) => /^https?:/.test(u)),
@@ -383,7 +405,6 @@ export function linksPage(site) {
     ...(featured && featuredUrl ? [{ label: `Listen: ${text(featured.title, "the latest release")}`, url: featuredUrl, icon: icon.play, primary: true }] : []),
     ...site.socials.filter((s) => safeUrl(s.url)).map((s) => ({ label: platformLabel(s.platform), url: safeUrl(s.url), icon: brandSvg(s.platform) })),
     ...(site.links.extra || []).filter((l) => safeUrl(l.url)).map((l) => ({ label: l.label, url: safeUrl(l.url), icon: /promptmidi/i.test(l.url) ? mark : icon.external })),
-    ...(site.contact.email ? [{ label: "Email", url: "mailto:" + site.contact.email, icon: icon.mail }] : []),
   ];
 
   const body = `
@@ -393,7 +414,8 @@ export function linksPage(site) {
     ${safeUrl(a.photo) ? `<img class="avatar" src="${esc(safeUrl(a.photo))}" alt="" width="96" height="96">` : `<div class="avatar avatar-placeholder" aria-hidden="true">${esc(initials(a.name))}</div>`}
     <h1>${esc(a.name)}</h1>
     <p class="muted">${esc(a.tagline)}</p>
-    <ul class="link-list">${items.map((l) => `<li><a class="link-button${l.primary ? " primary" : ""}" href="${esc(l.url)}"${/^https?:/.test(l.url) ? ' target="_blank" rel="noopener"' : ""}>${l.icon}<span>${esc(l.label)}</span></a></li>`).join("")}</ul>
+    <ul class="link-list">${items.map((l) => `<li><a class="link-button${l.primary ? " primary" : ""}" href="${esc(l.url)}"${/^https?:/.test(l.url) ? ' target="_blank" rel="noopener"' : ""}>${l.icon}<span>${esc(l.label)}</span></a></li>`).join("")}${
+      site.contact.email ? `<li>${emailLink(site.contact.email, "link-button", () => `${icon.mail}<span>Email</span>`)}</li>` : ""}</ul>
     <a class="muted small" href="index.html">${esc(a.name)} · website</a>
   </div>
 </div>`;

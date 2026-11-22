@@ -20,6 +20,14 @@
     menu?.setAttribute("aria-expanded", "false");
   }));
 
+  // Email links are put together here, so the address isn't sitting in the page for spam harvesters.
+  document.querySelectorAll(".email-link").forEach((a) => {
+    const address = `${a.dataset.u}@${a.dataset.d}`;
+    a.href = `mailto:${address}`;
+    const label = a.querySelector(".email-text");
+    if (label) label.textContent = address;
+  });
+
   // Players load only when asked: nothing is fetched from Spotify, YouTube and co. before that.
   document.querySelectorAll(".embed").forEach((box) => {
     box.querySelector(".embed-load")?.addEventListener("click", () => {

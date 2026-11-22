@@ -92,6 +92,7 @@ export function build({ quiet = false } = {}) {
   const site = JSON.parse(readFileSync(join(root, "site.json"), "utf8"));
 
   for (const r of site.music.releases) {
+    r.wide = (r.coverShape || site.music.coverShape) === "wide";
     r.embedResolved = resolveEmbed(r.embed);
     if (r.embed && !r.embedResolved && !quiet) console.warn(`  ! ${r.title}: can't make a player from ${r.embed}`);
   }
