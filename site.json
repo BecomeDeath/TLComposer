@@ -1,5 +1,5 @@
 {
-  "_help": "Everything on the website comes from this file. Edit it, then run `node build.mjs` (or push: GitHub Pages rebuilds the site). Empty links are left out. Fields marked TODO are placeholders and are hidden until you fill them in. For a release player, paste a Spotify, YouTube, SoundCloud or Apple Music share link (or a Bandcamp EmbeddedPlayer link) into embed.",
+  "_help": "Everything on the website comes from this file. Edit it, then run `node build.mjs` (or push: GitHub Pages rebuilds the site). Empty links are left out. Fields marked TODO are placeholders and are hidden until you fill them in. For a release player, paste a Spotify, YouTube, SoundCloud or Apple Music share link (or a Bandcamp EmbeddedPlayer link) into embed. The statement, focus, marquee and contact heading are the large lines of text on the home page.",
   "site": {
     "url": "https://becomedeath.github.io/TLComposer/",
     "title": "Tobias Lauritsen · Orchestral composer",
@@ -11,14 +11,22 @@
     "name": "Tobias Lauritsen",
     "tagline": "Orchestral composer from Denmark.",
     "intro": "Orchestral music on YouTube, and PromptMIDI: a free plug-in that turns a description in words into MIDI.",
+    "statement": "Orchestral music from Denmark: heroic fantasy themes, orchestral arrangements, and a free plug-in that turns words into MIDI.",
     "photo": "",
     "location": "Denmark",
+    "timezone": "Europe/Copenhagen",
+    "focus": [
+      "Orchestral",
+      "Heroic fantasy",
+      "Arrangements"
+    ],
     "bio": [
       "Tobias Lauritsen is an orchestral composer from Denmark.",
       "He also makes PromptMIDI, a free plug-in that writes orchestral cues and other MIDI from a description in words."
     ]
   },
   "contact": {
+    "heading": "Let’s make something.",
     "email": "tlcomposer@gmail.com",
     "note": "Bookings, collaborations, licensing and press."
   },
@@ -80,6 +88,13 @@
       "url": "https://github.com/BecomeDeath"
     }
   ],
+  "marquee": [
+    "Orchestral",
+    "Heroic fantasy",
+    "Arrangements",
+    "Made in Denmark",
+    "PromptMIDI"
+  ],
   "music": {
     "heading": "Music",
     "intro": "Original pieces and orchestral arrangements. More on YouTube.",
@@ -125,6 +140,7 @@
     "name": "PromptMIDI",
     "tagline": "Describe the music in words. Get multi-track MIDI.",
     "summary": "A VST3 instrument plug-in (with AU on macOS and a standalone app) with a prompt window: type \"Generate me a fantasy orchestral midi\" or \"Make me a soft piano midi\", press Generate, and drag the result into your DAW.",
+    "statement": "Type what you want to hear. PromptMIDI writes it as multi-track MIDI, from orchestral cues to soft piano, jazz and lo-fi, and checks every take against what you asked for.",
     "repo": "https://github.com/BecomeDeath/PromptMIDI",
     "downloads": [
       {

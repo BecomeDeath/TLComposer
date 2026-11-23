@@ -1,5 +1,8 @@
 // Page templates: plain functions that return HTML. Every value from site.json goes through
 // esc() (text) or safeUrl() (links), so content can't break the markup.
+//
+// The pages work without JavaScript: links go to YouTube, the demo has plain audio players, and
+// everything that animates in is visible from the start. main.js adds the motion on top.
 
 import { brandIcons } from "./brand-icons.mjs";
 
@@ -20,21 +23,26 @@ const isTodo = (s) => !s || /^TODO\b/.test(String(s));
 /** Text, or nothing while it's still a placeholder (so drafts don't show "TODO" on the page). */
 const text = (s, fallback = "") => (isTodo(s) ? fallback : s);
 
+const pad2 = (n) => String(n).padStart(2, "0");
+
 //==============================================================================
 // Icons
+
+const stroke = (d, w = 1.6) => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}" fill="none" stroke="currentColor" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
 export const icon = {
   play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z" fill="currentColor"/></svg>',
   pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/></svg>',
-  download: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 15.5V19h14v-3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  arrow: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13m-5-5 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  external: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h5v5m0-5-8 8M18 14v4.5a.5.5 0 0 1-.5.5h-12a.5.5 0 0 1-.5-.5v-12a.5.5 0 0 1 .5-.5H10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  mail: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m4.5 7 7.5 6 7.5-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  menu: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
-  close: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
-  sun: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
-  moon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 14.5A7.5 7.5 0 0 1 9.5 4.5a7.5 7.5 0 1 0 10 10z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>',
-  github: brandSvg("github"),
+  download: stroke("M12 4v11m-4.5-4.5L12 15l4.5-4.5M5 15.5V19h14v-3.5"),
+  arrow: stroke("M5 12h13m-5-5 5 5-5 5"),
+  arrowUp: stroke("M12 19V6m-5 5 5-5 5 5"),
+  external: stroke("M7 17 17 7m-8 0h8v8"),
+  mail: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m4.5 7 7.5 6 7.5-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  close: stroke("m6 6 12 12M18 6 6 18"),
+  sun: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
+  moon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 14.5A7.5 7.5 0 0 1 9.5 4.5a7.5 7.5 0 1 0 10 10z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  spark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7z" fill="currentColor"/></svg>',
+  check: stroke("m5 12.5 4.5 4.5L19 7.5", 1.8),
 };
 
 function brandSvg(platform) {
@@ -50,110 +58,140 @@ export const mark = `<svg class="mark" viewBox="0 0 28 28" aria-hidden="true"><d
 //==============================================================================
 // Pieces
 
-function socialLinks(site, cls = "socials") {
-  const items = site.socials.filter((s) => safeUrl(s.url));
-  if (!items.length) return "";
-  return `<ul class="${cls}">${items
-    .map((s) => `<li><a href="${esc(safeUrl(s.url))}" rel="me noopener" target="_blank" aria-label="${esc(platformLabel(s.platform))}" title="${esc(platformLabel(s.platform))}">${brandSvg(s.platform)}</a></li>`)
-    .join("")}</ul>`;
-}
+const socials = (site) => site.socials.filter((s) => safeUrl(s.url));
 
 function initials(name) {
   return String(name).split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "♪";
 }
 
-function cover(release, cls = "cover") {
-  const c = release.wide ? `${cls} wide` : cls;
-  const [w, h] = release.wide ? [1280, 720] : [600, 600];
-  if (safeUrl(release.cover)) return `<img class="${c}" src="${esc(safeUrl(release.cover))}" alt="${esc(release.title)}" loading="lazy" width="${w}" height="${h}">`;
-  return `<div class="${c} cover-placeholder" aria-hidden="true"><span>${esc(initials(text(release.title, "New release")))}</span></div>`;
+/** Text that rolls up to a copy of itself on hover (nav links, buttons). */
+const roll = (label) => `<span class="roll"><span data-text="${esc(label)}">${esc(label)}</span></span>`;
+
+/** A button-looking link. Its fill grows from where the pointer came in (main.js). */
+function button(href, label, { cls = "", iconHtml = "", external = false, attrs = "" } = {}) {
+  return `<a class="button ${cls}" href="${esc(href)}"${external ? ' target="_blank" rel="noopener"' : ""} data-magnetic ${attrs}><span class="button-fill" aria-hidden="true"></span>${roll(label)}${iconHtml ? `<span class="button-icon">${iconHtml}</span>` : ""}</a>`;
 }
 
-/** A video's thumbnail that turns into its player when clicked (nothing loads from YouTube before that). */
-function videoFacade(release) {
+function cover(release, cls = "cover", { lazy = true, sizes = "" } = {}) {
+  if (!safeUrl(release.cover)) return `<div class="${cls} cover-placeholder" aria-hidden="true"><span>${esc(initials(text(release.title, "New release")))}</span></div>`;
+  const [w, h] = release.wide ? [1280, 720] : [600, 600];
+  return `<img class="${cls}" src="${esc(safeUrl(release.cover))}" alt=""${lazy ? ' loading="lazy"' : ""} decoding="async" width="${w}" height="${h}"${sizes ? ` sizes="${sizes}"` : ""}>`;
+}
+
+/** Where a release goes: the video in the lightbox (main.js), else its first link. */
+function releaseTarget(release) {
+  const firstLink = Object.values(release.links || {}).map(safeUrl).find(Boolean) || "";
   const e = release.embedResolved;
-  if (!e || e.label !== "YouTube" || !safeUrl(release.cover)) return "";
-  return `<div class="embed video-facade" data-src="${esc(e.src)}" data-height="0" data-title="${esc(text(release.title, "Video"))}">
-    <button class="embed-load cover-button" type="button" aria-label="Play ${esc(text(release.title, "the video"))}">
-      ${cover({ ...release, wide: true })}
-      <span class="play-badge">${icon.play}</span>
-    </button>
-  </div>`;
+  const video = e && e.label === "YouTube" ? e.src : "";
+  return { href: firstLink || "#music", video };
 }
 
 /** An email link that spam harvesters can't read in the page source (main.js assembles it). */
-function emailLink(email, cls, inner) {
+function emailLink(email, cls, inner, attrs = "") {
   const [user, domain] = String(email).split("@");
   if (!user || !domain) return "";
-  return `<a class="${cls} email-link" href="#contact" data-u="${esc(user)}" data-d="${esc(domain)}">${inner(`<span class="email-text">${esc(user)} [at] ${esc(domain)}</span>`)}</a>`;
+  return `<a class="${cls} email-link" href="#contact" data-u="${esc(user)}" data-d="${esc(domain)}" ${attrs}>${inner(`<span class="email-text">${esc(user)}<span class="at"> [at] </span>${esc(domain)}</span>`)}</a>`;
 }
 
-/** A player that loads the provider's embed only when asked (no tracking until then). */
-function embed(release) {
-  const e = release.embedResolved;
-  if (!e) return "";
-  return `<div class="embed" data-src="${esc(e.src)}" data-height="${e.height}" data-title="${esc(text(release.title, "Release"))}">
-    <button class="embed-load" type="button">${icon.play}<span>Play on ${esc(e.label)}</span></button>
-    <p class="embed-note">Loads the ${esc(e.label)} player</p>
-  </div>`;
-}
+/** A heading that main.js splits into words (or letters) that rise into place. */
+const split = (tag, html, { cls = "", id = "", mode = "words" } = {}) =>
+  `<${tag}${id ? ` id="${id}"` : ""} class="${cls}" data-split="${mode}">${html}</${tag}>`;
 
-function releaseLinks(release) {
-  const links = Object.entries(release.links || {}).filter(([, u]) => safeUrl(u));
-  if (!links.length) return "";
-  return `<ul class="platforms">${links
-    .map(([p, u]) => `<li><a href="${esc(safeUrl(u))}" target="_blank" rel="noopener">${brandSvg(p)}<span>${esc(platformLabel(p))}</span></a></li>`)
-    .join("")}</ul>`;
+const label = (n, s) => `<p class="label"><span class="label-n">(${pad2(n)})</span> ${esc(s)}</p>`;
+
+function nav(current) {
+  return [
+    ["index.html#work", "Work", "work"],
+    ["index.html#about", "About", "about"],
+    ["promptmidi.html", "PromptMIDI", "promptmidi"],
+    ["index.html#contact", "Contact", "contact"],
+  ].map(([href, name, id]) => ({ href, name, id, current: current === id }));
 }
 
 function header(site, current) {
   const a = site.artist;
-  const nav = [
-    ["index.html#music", "Music", "music"],
-    ["promptmidi.html", "PromptMIDI", "promptmidi"],
-    ["index.html#about", "About", "about"],
-    ["index.html#contact", "Contact", "contact"],
-  ];
+  const items = nav(current);
   return `<a class="skip" href="#main">Skip to content</a>
 <header class="site-header">
-  <div class="wrap header-row">
-    <a class="brand" href="index.html">${esc(a.name)}</a>
-    <nav class="nav" id="nav" aria-label="Main">
-      <ul>${nav.map(([href, label, id]) => `<li><a href="${href}"${current === id ? ' aria-current="page"' : ""}>${label}</a></li>`).join("")}</ul>
-    </nav>
-    <div class="header-tools">
-      <button class="icon-button theme-toggle" type="button" aria-label="Switch between dark and light">${icon.sun}${icon.moon}</button>
-      <button class="icon-button menu-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="nav">${icon.menu}${icon.close}</button>
-    </div>
+  <a class="brand" href="index.html" aria-label="${esc(a.name)}, home" data-magnetic="0.25">
+    <span class="brand-mark" aria-hidden="true">${esc(initials(a.name))}</span>
+    <span class="brand-name">${esc(a.name)}</span>
+  </a>
+  <nav class="nav" aria-label="Main">
+    <ul>${items.map((i) => `<li><a href="${i.href}"${i.current ? ' aria-current="page"' : ""} data-sound>${roll(i.name)}</a></li>`).join("")}</ul>
+  </nav>
+  <div class="header-tools">
+    <button class="sound-toggle" type="button" aria-pressed="false" title="Interface sounds" data-magnetic="0.3">
+      <span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="sound-label">Sound <span class="sound-state">off</span></span>
+    </button>
+    <button class="icon-button theme-toggle" type="button" aria-label="Switch between dark and light" data-magnetic="0.3">${icon.sun}${icon.moon}</button>
+    <button class="menu-toggle" type="button" aria-label="Menu" aria-expanded="false" aria-controls="menu"><span class="menu-lines" aria-hidden="true"><i></i><i></i></span></button>
   </div>
-</header>`;
+</header>
+<div class="menu" id="menu" hidden>
+  <nav aria-label="Menu">
+    <ol class="menu-links">${[...items, { href: "links.html", name: "Links", id: "links" }].map((i, n) => `<li style="--i:${n}"><a href="${i.href}"><span class="menu-n">${pad2(n + 1)}</span><span class="menu-name">${esc(i.name)}</span></a></li>`).join("")}</ol>
+  </nav>
+  <div class="menu-foot">
+    ${site.contact.email ? emailLink(site.contact.email, "menu-email", (t) => t) : ""}
+    <ul class="menu-socials">${socials(site).map((s) => `<li><a href="${esc(safeUrl(s.url))}" target="_blank" rel="me noopener">${esc(platformLabel(s.platform))}</a></li>`).join("")}</ul>
+  </div>
+</div>`;
 }
 
 function footer(site) {
+  const a = site.artist;
   const year = new Date().getFullYear();
   return `<footer class="site-footer">
-  <div class="wrap footer-row">
-    <div>
-      <a class="brand" href="index.html">${esc(site.artist.name)}</a>
-      <p class="muted">© ${year} ${esc(site.artist.name)}</p>
+  <div class="wrap footer-top">
+    <div class="footer-col">
+      <p class="label">Menu</p>
+      <ul>${nav("").map((i) => `<li><a href="${i.href}">${roll(i.name)}</a></li>`).join("")}<li><a href="links.html">${roll("Links")}</a></li></ul>
     </div>
-    ${socialLinks(site)}
-    <ul class="footer-links">
-      <li><a href="promptmidi.html">PromptMIDI</a></li>
-      <li><a href="links.html">Links</a></li>
-      ${site.contact.email ? `<li>${emailLink(site.contact.email, "", () => "Email")}</li>` : ""}
-    </ul>
+    <div class="footer-col">
+      <p class="label">Social</p>
+      <ul>${socials(site).map((s) => `<li><a href="${esc(safeUrl(s.url))}" target="_blank" rel="me noopener">${roll(platformLabel(s.platform))}</a></li>`).join("")}</ul>
+    </div>
+    <div class="footer-col">
+      <p class="label">Local time</p>
+      <p class="clock" data-tz="${esc(a.timezone || "")}"><span class="clock-place">${esc(a.location || "")}</span> <span class="clock-time"></span></p>
+      ${site.contact.email ? emailLink(site.contact.email, "footer-email", (t) => roll("Email") + `<span class="visually-hidden">${t}</span>`) : ""}
+    </div>
+    <button class="to-top" type="button" data-magnetic>${icon.arrowUp}<span>Back to top</span></button>
+  </div>
+  <div class="footer-word" aria-hidden="true"><span data-speed="-0.08">${esc(a.name)}</span></div>
+  <div class="wrap footer-bottom">
+    <span>© ${year} ${esc(a.name)}</span>
+    <span>Made in ${esc(a.location || "Denmark")}</span>
   </div>
 </footer>`;
 }
 
+/** The fixed layers every page shares: the liquid canvas, cursor, page curtain, video lightbox. */
+function chrome() {
+  return `<div class="liquid" aria-hidden="true"><canvas></canvas><div class="liquid-fallback"><i></i><i></i><i></i></div></div>
+<div class="cursor" aria-hidden="true"><div class="cursor-ring"><span class="cursor-label"></span></div><div class="cursor-dot"></div></div>
+<div class="curtain" aria-hidden="true"><span class="curtain-mark"></span></div>
+<dialog class="lightbox" aria-label="Video">
+  <div class="lightbox-frame"></div>
+  <p class="lightbox-title"></p>
+  <button class="lightbox-close" type="button" aria-label="Close the video" autofocus data-magnetic>${icon.close}</button>
+</dialog>
+<svg class="defs" aria-hidden="true" width="0" height="0">
+  <filter id="liquid-distort" x="-20%" y="-20%" width="140%" height="140%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.012 0.02" numOctaves="2" seed="3" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="0" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>`;
+}
+
 /** The whole page: head (meta, social cards, structured data), header, content, footer. */
-function layout(site, { title, description, path, current, body, bodyClass = "", jsonLd = null, image = "" }) {
+function layout(site, { title, description, path, current, body, bodyClass = "", jsonLd = null, image = "", bare = false, loader = false }) {
   const base = site.site.url ? site.site.url.replace(/\/?$/, "/") : "";
   const canonical = base ? base + (path === "index.html" ? "" : path) : "";
   const ogImage = image && base ? base + image : "";
   return `<!doctype html>
-<html lang="${esc(site.site.language || "en")}" data-theme="dark">
+<html lang="${esc(site.site.language || "en")}" data-theme="dark" class="no-js">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -165,19 +203,23 @@ ${canonical ? `<link rel="canonical" href="${esc(canonical)}">` : ""}
 <meta property="og:description" content="${esc(description)}">
 ${canonical ? `<meta property="og:url" content="${esc(canonical)}">` : ""}
 ${ogImage ? `<meta property="og:image" content="${esc(ogImage)}"><meta name="twitter:card" content="summary_large_image">` : '<meta name="twitter:card" content="summary">'}
-<meta name="theme-color" content="#0d0f13">
+<meta name="theme-color" content="#08080c">
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="assets/fonts/instrument-serif.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/inter-regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="styles.css">
-<script>try{var t=localStorage.getItem("theme");if(t)document.documentElement.dataset.theme=t;else if(matchMedia("(prefers-color-scheme: light)").matches)document.documentElement.dataset.theme="light"}catch(e){}</script>
+<script>(function(d){var r=d.documentElement,m=matchMedia("(prefers-reduced-motion: reduce)").matches,pt=false,seen=true;r.className="js"+(m?" reduce":"");try{var t=localStorage.getItem("theme");r.dataset.theme=t||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark")}catch(e){}try{pt=!!sessionStorage.getItem("pt");sessionStorage.removeItem("pt");seen=!!sessionStorage.getItem("seen")}catch(e){}if(pt&&!m)r.classList.add("pt-in");if(${loader ? "seen||m||pt" : "true"})r.classList.add("no-loader")})(document)</script>
 ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, "\\u003c")}</script>` : ""}
 </head>
 <body class="${bodyClass}">
-${body.includes('class="links-page"') ? "" : header(site, current)}
+${loader ? `<div class="loader" aria-hidden="true"><div class="loader-name">${esc(site.artist.name).split("").map((c, i) => `<span style="--i:${i}">${c === " " ? "&nbsp;" : c}</span>`).join("")}</div><div class="loader-count"><span>000</span></div></div>` : ""}
+${chrome()}
+${bare ? "" : header(site, current)}
 <main id="main">
 ${body}
 </main>
-${body.includes('class="links-page"') ? "" : footer(site)}
+${bare ? "" : footer(site)}
+<script src="assets/vendor/lenis.min.js" defer></script>
 <script src="main.js" defer></script>
 </body>
 </html>
@@ -185,103 +227,151 @@ ${body.includes('class="links-page"') ? "" : footer(site)}
 }
 
 //==============================================================================
+// The PromptMIDI demo: a prompt, the real notes of that example, and its audio.
+
+function demo(site, { large = false } = {}) {
+  const p = site.promptmidi;
+  const ex = p.examples.filter((e) => safeUrl(e.file));
+  if (!ex.length) return "";
+  const rollFor = (e) => `assets/rolls/${e.file.split("/").pop().replace(/\.mp3$/, "")}.json`;
+  return `<div class="pm-demo${large ? " pm-demo-large" : ""}" data-demo>
+  <div class="pm-demo-bar">
+    <span class="pm-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="pm-demo-name">${mark}${esc(p.name)}</span>
+    <span class="pm-status" data-status aria-live="polite">Offline</span>
+  </div>
+  <div class="pm-prompt">
+    <span class="pm-prompt-icon">${icon.spark}</span>
+    <span class="pm-prompt-text" data-prompt>${esc(ex[0].prompt)}</span><span class="pm-caret" aria-hidden="true"></span>
+  </div>
+  <p class="pm-meta" data-meta>&nbsp;</p>
+  <div class="pm-roll" data-cursor="Play"><canvas aria-hidden="true"></canvas><p class="pm-roll-hint">The notes PromptMIDI wrote for this prompt</p></div>
+  <div class="pm-transport">
+    <button class="pm-play" type="button" aria-label="Play ${esc(ex[0].title)}" data-magnetic="0.3">${icon.play}${icon.pause}</button>
+    <span class="pm-time" data-time>0:00</span>
+    <div class="pm-progress" role="slider" aria-label="Position" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0" aria-valuetext="0:00" tabindex="0"><span></span></div>
+    <span class="pm-time pm-dur">0:30</span>
+  </div>
+  <div class="pm-chips" role="group" aria-label="Examples">${ex.map((e, i) => `<button class="pm-chip" type="button" aria-pressed="${i === 0}" data-src="${esc(safeUrl(e.file))}" data-roll="${esc(rollFor(e))}" data-prompt="${esc(e.prompt)}" data-title="${esc(e.title)}" data-sound>${esc(e.title)}</button>`).join("")}</div>
+  <noscript><ul class="pm-plain">${ex.map((e) => `<li><strong>${esc(e.title)}</strong> “${esc(e.prompt)}”<audio controls preload="none" src="${esc(safeUrl(e.file))}"></audio></li>`).join("")}</ul></noscript>
+  ${text(p.examplesNote) ? `<p class="pm-note">${esc(p.examplesNote)}</p>` : ""}
+</div>`;
+}
+
+//==============================================================================
 // Pages
 
 export function homePage(site) {
   const a = site.artist, m = site.music, p = site.promptmidi;
-  const releases = m.releases.filter((r) => !isTodo(r.title) || true);
+  const releases = m.releases.filter((r) => !isTodo(r.title));
   const featured = releases.find((r) => r.featured) || releases[0];
-  const others = releases.filter((r) => r !== featured);
   const email = site.contact.email;
+  const youtube = site.socials.find((s) => s.platform === "youtube" && safeUrl(s.url));
+  const [first, ...rest] = String(a.name).split(" ");
+  const ft = featured ? releaseTarget(featured) : null;
+  const chars = (s) => esc(s).split("").map((c) => (c === " " ? " " : `<span class="c">${c}</span>`)).join("");
 
   const body = `
-<section class="hero">
-  <div class="hero-roll" aria-hidden="true">${site.pianoRoll}</div>
-  <div class="wrap hero-grid">
-    <div class="hero-copy">
-      ${a.location ? `<p class="eyebrow">${esc(a.location)}</p>` : ""}
-      <h1>${esc(a.name)}</h1>
-      <p class="lead">${esc(a.tagline)}</p>
-      ${text(a.intro) ? `<p class="intro">${esc(a.intro)}</p>` : ""}
-      <div class="actions">
-        <a class="button primary" href="#music">${icon.play}<span>Listen</span></a>
-        <a class="button" href="promptmidi.html">${mark}<span>Get PromptMIDI</span></a>
-      </div>
-      ${socialLinks(site)}
+<section class="hero" id="top" data-liquid>
+  <div class="hero-inner" data-hero>
+    <p class="hero-eyebrow" data-reveal><span>${esc(a.tagline.replace(/\.$/, ""))}</span></p>
+    <h1 class="hero-title" aria-label="${esc(a.name)}">
+      <span class="hero-line" aria-hidden="true">${chars(first)}</span>
+      ${rest.length ? `<span class="hero-line hero-line-2" aria-hidden="true"><em>${chars(rest.join(" "))}</em></span>` : ""}
+    </h1>
+    <div class="hero-foot">
+      ${text(a.intro) ? `<p class="hero-intro" data-reveal>${esc(a.intro)}</p>` : ""}
+      ${featured ? `<a class="hero-latest" href="${esc(ft.href)}" target="_blank" rel="noopener"${ft.video ? ` data-video="${esc(ft.video)}" data-title="${esc(featured.title)}"` : ""} data-cursor="Play" data-reveal data-sound>
+        <span class="hero-latest-media">${cover({ ...featured, wide: true }, "hero-latest-img", { lazy: false })}<span class="hero-latest-play">${icon.play}</span></span>
+        <span class="hero-latest-text"><span class="label">Latest release</span><strong>${esc(featured.title)}</strong></span>
+      </a>` : ""}
     </div>
-    ${featured ? `<a class="hero-release" href="#music">
-      ${cover(featured, "cover")}
-      <span class="hero-release-meta"><span class="eyebrow">Latest release</span><strong>${esc(text(featured.title, "New release"))}</strong></span>
-    </a>` : ""}
+  </div>
+  <a class="scroll-cue" href="#about" aria-label="Scroll to About"><span>Scroll</span><i aria-hidden="true"></i></a>
+</section>
+
+<section class="section about solid fade-in" id="about" aria-labelledby="about-h">
+  <div class="wrap about-grid">
+    <div class="about-side">
+      ${label(1, "About")}
+      <h2 id="about-h" class="visually-hidden">About</h2>
+    </div>
+    <div class="about-main">
+      <p class="statement" data-words>${esc(text(a.statement, a.tagline))}</p>
+      <div class="about-cols">
+        <div class="bio" data-reveal>${a.bio.filter((b) => !isTodo(b)).map((b) => `<p>${esc(b)}</p>`).join("")}</div>
+        <dl class="facts" data-reveal>
+          ${a.location ? `<div><dt>Based in</dt><dd>${esc(a.location)}</dd></div>` : ""}
+          ${(a.focus || []).length ? `<div><dt>Focus</dt><dd>${a.focus.map(esc).join(", ")}</dd></div>` : ""}
+          <div><dt>Plug-in</dt><dd><a class="text-link" href="promptmidi.html">${esc(p.name)}</a>, free</dd></div>
+        </dl>
+      </div>
+    </div>
   </div>
 </section>
 
-<section class="section" id="music" aria-labelledby="music-h">
+${featured ? `<section class="showcase solid" id="work" aria-labelledby="showcase-h">
+  <div class="wrap showcase-head">${label(2, "Latest release")}</div>
+  <a class="showcase-frame" href="${esc(ft.href)}" target="_blank" rel="noopener"${ft.video ? ` data-video="${esc(ft.video)}" data-title="${esc(featured.title)}"` : ""} data-cursor="Play" data-showcase>
+    <span class="showcase-media">${cover({ ...featured, wide: true }, "showcase-img", { sizes: "100vw" })}</span>
+    <span class="showcase-shade" aria-hidden="true"></span>
+    <span class="showcase-caption">
+      ${featured.type ? `<span class="label">${esc(featured.type)}</span>` : ""}
+      <span id="showcase-h" class="showcase-title">${esc(featured.title)}</span>
+    </span>
+    <span class="showcase-play" aria-hidden="true">${icon.play}<span>Watch</span></span>
+  </a>
+</section>` : ""}
+
+<section class="section works solid" id="music" aria-labelledby="music-h">
   <div class="wrap">
     <div class="section-head">
-      <h2 id="music-h">${esc(m.heading || "Music")}</h2>
-      ${text(m.intro) ? `<p class="muted">${esc(m.intro)}</p>` : ""}
+      ${label(3, "Selected works")}
+      ${split("h2", esc(m.heading || "Music"), { cls: "display", id: "music-h" })}
+      ${text(m.intro) ? `<p class="section-intro" data-reveal>${esc(m.intro)}</p>` : ""}
     </div>
-    ${featured ? `<article class="feature${featured.wide ? " feature-wide" : ""}">
-      ${videoFacade(featured) || cover(featured, "cover feature-cover")}
-      <div class="feature-body">
-        ${[featured.type, featured.date].filter(Boolean).length ? `<p class="eyebrow">${esc([featured.type, featured.date].filter(Boolean).join(" · "))}</p>` : ""}
-        <h3>${esc(text(featured.title, "New release"))}</h3>
-        ${text(featured.description) ? `<p>${esc(featured.description)}</p>` : ""}
-        ${videoFacade(featured) ? "" : embed(featured)}
-        ${releaseLinks(featured)}
+    <ol class="works-list">${releases.map((r, i) => {
+      const t = releaseTarget(r);
+      return `<li data-reveal style="--i:${i}"><a class="work" href="${esc(t.href)}" target="_blank" rel="noopener"${t.video ? ` data-video="${esc(t.video)}" data-title="${esc(r.title)}"` : ""}${safeUrl(r.cover) ? ` data-image="${esc(safeUrl(r.cover))}"` : ""} data-cursor="Play" data-sound>
+        <span class="work-index">${pad2(i + 1)}</span>
+        <span class="work-title">${esc(r.title)}</span>
+        <span class="work-type">${esc(r.type || "")}</span>
+        <span class="work-go" aria-hidden="true">${icon.play}</span>
+        ${cover({ ...r, wide: true }, "work-thumb")}
+        ${text(r.description) ? `<span class="work-desc">${esc(r.description)}</span>` : ""}
+      </a></li>`;
+    }).join("")}</ol>
+    ${youtube ? `<div class="works-more">${button(safeUrl(youtube.url), "All music on YouTube", { external: true, iconHtml: icon.external })}</div>` : ""}
+  </div>
+  <div class="work-preview" aria-hidden="true"><div class="work-preview-inner"></div></div>
+</section>
+
+<div class="marquee solid" aria-hidden="true"><div class="marquee-track">${Array(2).fill(`<span class="marquee-group">${(site.marquee || []).map((w, i) => `<span class="${i % 2 ? "it" : ""}">${esc(w)}</span><i>${icon.spark}</i>`).join("")}</span>`).join("")}</div></div>
+
+<section class="section pm" id="promptmidi" aria-labelledby="pm-h" data-liquid>
+  <div class="wrap pm-grid">
+    <div class="pm-copy">
+      ${label(4, "Free plug-in")}
+      ${split("h2", esc(p.name), { cls: "display", id: "pm-h" })}
+      <p class="lead" data-reveal>${esc(p.tagline)}</p>
+      <p class="muted" data-reveal>${esc(p.summary)}</p>
+      <ul class="pm-points" data-reveal>${p.features.slice(0, 3).map((f) => `<li>${icon.check}<span><strong>${esc(f.title)}.</strong> ${esc(f.text)}</span></li>`).join("")}</ul>
+      <div class="actions" data-reveal>
+        ${button("promptmidi.html#download", "Download free", { cls: "primary", iconHtml: icon.download })}
+        ${button("promptmidi.html", "See what it does", { iconHtml: icon.arrow })}
       </div>
-    </article>` : ""}
-    ${others.length ? `<ul class="release-grid${others.some((r) => r.wide) ? " release-grid-wide" : ""}">${others.map((r) => `<li class="release">
-      ${videoFacade(r) || cover(r)}
-      <div class="release-body">
-        ${[r.type, r.date].filter(Boolean).length ? `<p class="eyebrow">${esc([r.type, r.date].filter(Boolean).join(" · "))}</p>` : ""}
-        <h3>${esc(text(r.title, "Release"))}</h3>
-        ${text(r.description) ? `<p class="muted">${esc(r.description)}</p>` : ""}
-        ${videoFacade(r) ? "" : embed(r)}
-        ${releaseLinks(r)}
-      </div>
-    </li>`).join("")}</ul>` : ""}
+    </div>
+    <div class="pm-demo-wrap" data-reveal>${demo(site)}</div>
   </div>
 </section>
 
-<section class="section section-alt" id="promptmidi" aria-labelledby="pm-h">
-  <div class="wrap split">
-    <div>
-      <p class="eyebrow">${mark} Free plug-in</p>
-      <h2 id="pm-h">${esc(p.name)}</h2>
-      <p class="lead">${esc(p.tagline)}</p>
-      <p>${esc(p.summary)}</p>
-      <ul class="checks">${p.features.slice(0, 3).map((f) => `<li><strong>${esc(f.title)}.</strong> ${esc(f.text)}</li>`).join("")}</ul>
-      <div class="actions">
-        <a class="button primary" href="promptmidi.html#download">${icon.download}<span>Download</span></a>
-        <a class="button" href="promptmidi.html">${icon.arrow}<span>See what it does</span></a>
-      </div>
-    </div>
-    <a class="shot" href="promptmidi.html"><img src="assets/promptmidi/screenshot.png" alt="PromptMIDI: a prompt box, the controls, and a fantasy orchestral piece in the arrangement view" loading="lazy" width="1400" height="903"></a>
-  </div>
-</section>
-
-<section class="section" id="about" aria-labelledby="about-h">
-  <div class="wrap about">
-    ${safeUrl(a.photo) ? `<img class="portrait" src="${esc(safeUrl(a.photo))}" alt="${esc(a.name)}" loading="lazy" width="640" height="800">` : `<div class="portrait portrait-placeholder" aria-hidden="true"><span>${esc(initials(a.name))}</span></div>`}
-    <div>
-      <h2 id="about-h">About</h2>
-      ${a.bio.filter((b) => !isTodo(b)).map((b) => `<p>${esc(b)}</p>`).join("") || `<p class="muted">A short bio is coming soon.</p>`}
-    </div>
-  </div>
-</section>
-
-<section class="section section-alt" id="contact" aria-labelledby="contact-h">
-  <div class="wrap contact">
-    <div>
-      <h2 id="contact-h">Contact</h2>
-      <p class="lead">${esc(site.contact.note)}</p>
-    </div>
-    <div class="contact-actions">
-      ${email ? emailLink(email, "button primary", (t) => `${icon.mail}${t}`) : ""}
-      ${socialLinks(site, "socials socials-large")}
-    </div>
+<section class="section contact" id="contact" aria-labelledby="contact-h" data-liquid>
+  <div class="wrap">
+    ${label(5, "Contact")}
+    ${split("h2", esc(text(site.contact.heading, "Get in touch")), { cls: "contact-title display", id: "contact-h" })}
+    <p class="lead" data-reveal>${esc(site.contact.note)}</p>
+    ${email ? `<div class="contact-email-wrap" data-reveal>${emailLink(email, "contact-email", (t) => `${t}<span class="contact-email-arrow">${icon.arrow}</span>`, 'data-magnetic="0.15" data-cursor="Write"')}</div>` : ""}
+    <ul class="pills" data-reveal>${socials(site).map((s) => `<li><a class="pill" href="${esc(safeUrl(s.url))}" target="_blank" rel="me noopener" data-magnetic="0.3" data-sound><span class="button-fill" aria-hidden="true"></span>${brandSvg(s.platform)}<span>${esc(platformLabel(s.platform))}</span></a></li>`).join("")}</ul>
   </div>
 </section>`;
 
@@ -291,7 +381,9 @@ export function homePage(site) {
     path: "index.html",
     current: "home",
     body,
-    image: "assets/promptmidi/screenshot.png",
+    bodyClass: "page-home",
+    loader: true,
+    image: featured && safeUrl(featured.cover) ? safeUrl(featured.cover) : "assets/promptmidi/screenshot.png",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "Person",
@@ -307,73 +399,83 @@ export function homePage(site) {
 export function promptmidiPage(site) {
   const p = site.promptmidi;
   const body = `
-<section class="hero hero-product">
-  <div class="hero-roll" aria-hidden="true">${site.pianoRoll}</div>
-  <div class="wrap center">
-    <p class="eyebrow">${mark} Free · VST3, AU and standalone</p>
-    <h1>${esc(p.name)}</h1>
-    <p class="lead">${esc(p.tagline)}</p>
-    <p class="intro">${esc(p.summary)}</p>
-    <div class="actions center">
-      <a class="button primary" href="#download">${icon.download}<span>Download</span></a>
-      <a class="button" href="#listen">${icon.play}<span>Hear examples</span></a>
+<section class="pm-hero" data-liquid>
+  <div class="wrap">
+    <p class="label" data-reveal>${mark} Free · VST3, AU and standalone</p>
+    ${split("h1", esc(p.name), { cls: "pm-hero-title", mode: "chars" })}
+    <p class="lead pm-hero-lead" data-reveal>${esc(p.tagline)}</p>
+    <div class="actions" data-reveal>
+      ${button("#download", "Download free", { cls: "primary", iconHtml: icon.download })}
+      ${button("#listen", "Hear examples", { iconHtml: icon.play })}
     </div>
-    <figure class="product-shot">
-      <img src="assets/promptmidi/screenshot.png" alt="PromptMIDI's window: the prompt box, example prompts, the Key, Scale, Tempo, Bars, Length and Instruments controls, and a 21-track orchestral piece in the arrangement view" width="1400" height="903">
-    </figure>
+  </div>
+  <div class="wrap pm-hero-demo" id="listen" data-reveal>${demo(site, { large: true })}</div>
+</section>
+
+<section class="section solid fade-in" aria-labelledby="intro-h">
+  <div class="wrap about-grid">
+    <div class="about-side">${label(1, "What it is")}</div>
+    <div class="about-main">
+      <h2 id="intro-h" class="visually-hidden">What it is</h2>
+      <p class="statement" data-words>${esc(text(p.statement, p.tagline))}</p>
+    </div>
   </div>
 </section>
 
-<section class="section" id="listen" aria-labelledby="listen-h">
+<section class="section solid" aria-labelledby="features-h">
   <div class="wrap">
     <div class="section-head">
-      <h2 id="listen-h">Hear it</h2>
-      <p class="muted">${esc(p.examplesNote)}</p>
+      ${label(2, "Features")}
+      ${split("h2", "What it does", { cls: "display", id: "features-h" })}
     </div>
-    <ul class="tracks">${p.examples.map((e, i) => `<li class="track">
-      <button class="track-play" type="button" data-src="${esc(safeUrl(e.file))}" aria-label="Play ${esc(e.title)}">${icon.play}${icon.pause}</button>
-      <div class="track-body">
-        <div class="track-title"><strong>${esc(e.title)}</strong><span class="track-time" data-time>0:00</span></div>
-        <p class="prompt">“${esc(e.prompt)}”</p>
-        <div class="track-progress" role="slider" aria-label="Position in ${esc(e.title)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0"><span></span></div>
-      </div>
+    <ul class="features">${p.features.map((f, i) => `<li class="feature spot" data-reveal style="--i:${i % 3}">
+      <span class="feature-n">${pad2(i + 1)}</span>
+      <h3>${esc(f.title)}</h3>
+      <p>${esc(f.text)}</p>
     </li>`).join("")}</ul>
   </div>
 </section>
 
-<section class="section section-alt" aria-labelledby="features-h">
-  <div class="wrap">
-    <div class="section-head"><h2 id="features-h">What it does</h2></div>
-    <ul class="features">${p.features.map((f) => `<li><h3>${esc(f.title)}</h3><p>${esc(f.text)}</p></li>`).join("")}</ul>
-  </div>
-</section>
-
-<section class="section" aria-labelledby="how-h">
-  <div class="wrap split">
-    <div>
-      <h2 id="how-h">How it works</h2>
-      <ol class="steps">${p.steps.map((s) => `<li><strong>${esc(s.title)}</strong><span>${esc(s.text)}</span></li>`).join("")}</ol>
+<section class="section solid" aria-labelledby="how-h">
+  <div class="wrap how">
+    <div class="how-side">
+      ${label(3, "How it works")}
+      ${split("h2", "Three steps", { cls: "display", id: "how-h" })}
     </div>
-    <figure class="shot"><img src="assets/promptmidi/editor.png" alt="The note editor open on a piccolo part, with the arrangement above it" loading="lazy" width="1400" height="903"></figure>
+    <ol class="steps">${p.steps.map((s, i) => `<li class="step" data-reveal>
+      <span class="step-n">${pad2(i + 1)}</span>
+      <div><h3>${esc(s.title)}</h3><p>${esc(s.text)}</p></div>
+    </li>`).join("")}</ol>
+  </div>
+  <div class="wrap shots">
+    <figure class="shot" data-tilt data-reveal><img src="assets/promptmidi/screenshot.png" alt="PromptMIDI's window: the prompt box, example prompts, the Key, Scale, Tempo, Bars, Length and Instruments controls, and a 21-track orchestral piece in the arrangement view" loading="lazy" decoding="async" width="1400" height="903"></figure>
+    <figure class="shot" data-tilt data-reveal style="--i:1"><img src="assets/promptmidi/editor.png" alt="The note editor open on a piccolo part, with the arrangement above it" loading="lazy" decoding="async" width="1400" height="903"></figure>
   </div>
 </section>
 
-<section class="section section-alt" id="download" aria-labelledby="download-h">
+<section class="section download" id="download" aria-labelledby="download-h" data-liquid>
   <div class="wrap">
     <div class="section-head">
-      <h2 id="download-h">Download</h2>
-      <p class="muted">${esc(p.requirements)}</p>
+      ${label(4, "Download")}
+      ${split("h2", "Get PromptMIDI", { cls: "display", id: "download-h" })}
+      <p class="section-intro" data-reveal>${esc(p.requirements)}</p>
     </div>
-    <ul class="downloads">${p.downloads.filter((d) => safeUrl(d.url)).map((d) => `<li><a class="download" href="${esc(safeUrl(d.url))}" target="_blank" rel="noopener">
-      ${icon.download}<span><strong>${esc(d.label)}</strong><span class="muted">${esc(d.detail)}</span></span></a></li>`).join("")}</ul>
-    <p class="muted small">Copy the whole <code>PromptMIDI.vst3</code> folder into your VST3 folder and rescan plug-ins. ${safeUrl(p.repo) ? `Source code, build instructions and the full guide are on <a href="${esc(safeUrl(p.repo))}" target="_blank" rel="noopener">GitHub</a>.` : ""}</p>
+    <ul class="downloads">${p.downloads.filter((d) => safeUrl(d.url)).map((d, i) => `<li data-reveal style="--i:${i}"><a class="download-card spot" href="${esc(safeUrl(d.url))}" target="_blank" rel="noopener" data-cursor="Get" data-sound>
+      <span class="download-os">${esc(d.label)}</span>
+      <span class="download-detail">${esc(d.detail)}</span>
+      <span class="download-icon">${icon.download}</span>
+    </a></li>`).join("")}</ul>
+    <p class="small muted" data-reveal>Copy the whole <code>PromptMIDI.vst3</code> folder into your VST3 folder and rescan plug-ins. ${safeUrl(p.repo) ? `Source code, build instructions and the full guide are on <a class="text-link" href="${esc(safeUrl(p.repo))}" target="_blank" rel="noopener">GitHub</a>.` : ""}</p>
   </div>
 </section>
 
-<section class="section" aria-labelledby="faq-h">
-  <div class="wrap narrow">
-    <h2 id="faq-h">Questions</h2>
-    <div class="faq">${p.faq.map((f) => `<details><summary>${esc(f.q)}</summary><p>${esc(f.a)}</p></details>`).join("")}</div>
+<section class="section solid fade-in" aria-labelledby="faq-h">
+  <div class="wrap how">
+    <div class="how-side">
+      ${label(5, "Questions")}
+      ${split("h2", "FAQ", { cls: "display", id: "faq-h" })}
+    </div>
+    <div class="faq">${p.faq.map((f) => `<details data-reveal><summary data-sound><span>${esc(f.q)}</span><i aria-hidden="true"></i></summary><div class="faq-a"><p>${esc(f.a)}</p></div></details>`).join("")}</div>
   </div>
 </section>`;
 
@@ -383,6 +485,7 @@ export function promptmidiPage(site) {
     path: "promptmidi.html",
     current: "promptmidi",
     body,
+    bodyClass: "page-promptmidi",
     image: "assets/promptmidi/screenshot.png",
     jsonLd: {
       "@context": "https://schema.org",
@@ -400,25 +503,28 @@ export function promptmidiPage(site) {
 export function linksPage(site) {
   const a = site.artist;
   const featured = site.music.releases.find((r) => r.featured) || site.music.releases[0];
-  const featuredUrl = featured ? Object.values(featured.links || {}).map(safeUrl).find(Boolean) : "";
+  const ft = featured ? releaseTarget(featured) : null;
   const items = [
-    ...(featured && featuredUrl ? [{ label: `Listen: ${text(featured.title, "the latest release")}`, url: featuredUrl, icon: icon.play, primary: true }] : []),
-    ...site.socials.filter((s) => safeUrl(s.url)).map((s) => ({ label: platformLabel(s.platform), url: safeUrl(s.url), icon: brandSvg(s.platform) })),
+    ...socials(site).map((s) => ({ label: platformLabel(s.platform), url: safeUrl(s.url), icon: brandSvg(s.platform) })),
     ...(site.links.extra || []).filter((l) => safeUrl(l.url)).map((l) => ({ label: l.label, url: safeUrl(l.url), icon: /promptmidi/i.test(l.url) ? mark : icon.external })),
   ];
 
   const body = `
-<div class="links-page">
-  <div class="hero-roll" aria-hidden="true">${site.pianoRoll}</div>
+<section class="links-page" data-liquid>
   <div class="links-card">
-    ${safeUrl(a.photo) ? `<img class="avatar" src="${esc(safeUrl(a.photo))}" alt="" width="96" height="96">` : `<div class="avatar avatar-placeholder" aria-hidden="true">${esc(initials(a.name))}</div>`}
-    <h1>${esc(a.name)}</h1>
+    <a class="links-brand" href="index.html"><span class="brand-mark">${esc(initials(a.name))}</span></a>
+    <h1 class="links-name">${esc(a.name)}</h1>
     <p class="muted">${esc(a.tagline)}</p>
-    <ul class="link-list">${items.map((l) => `<li><a class="link-button${l.primary ? " primary" : ""}" href="${esc(l.url)}"${/^https?:/.test(l.url) ? ' target="_blank" rel="noopener"' : ""}>${l.icon}<span>${esc(l.label)}</span></a></li>`).join("")}${
-      site.contact.email ? `<li>${emailLink(site.contact.email, "link-button", () => `${icon.mail}<span>Email</span>`)}</li>` : ""}</ul>
-    <a class="muted small" href="index.html">${esc(a.name)} · website</a>
+    ${featured && ft ? `<a class="links-feature" href="${esc(ft.href)}" target="_blank" rel="noopener"${ft.video ? ` data-video="${esc(ft.video)}" data-title="${esc(featured.title)}"` : ""} data-cursor="Play">
+      ${cover({ ...featured, wide: true }, "links-feature-img", { lazy: false })}
+      <span class="links-feature-text"><span class="label">Listen</span><strong>${esc(featured.title)}</strong></span>
+      <span class="links-feature-play">${icon.play}</span>
+    </a>` : ""}
+    <ul class="link-list">${items.map((l, i) => `<li data-reveal style="--i:${i}"><a class="link-button" href="${esc(l.url)}"${/^https?:/.test(l.url) ? ' target="_blank" rel="noopener"' : ""} data-magnetic="0.12" data-sound><span class="button-fill" aria-hidden="true"></span>${l.icon}<span>${esc(l.label)}</span>${icon.arrow}</a></li>`).join("")}${
+      site.contact.email ? `<li data-reveal style="--i:${items.length}">${emailLink(site.contact.email, "link-button", () => `<span class="button-fill" aria-hidden="true"></span>${icon.mail}<span>Email</span>${icon.arrow}`, 'data-magnetic="0.12" data-sound')}</li>` : ""}</ul>
+    <a class="small muted text-link" href="index.html">${esc(a.name)} · website</a>
   </div>
-</div>`;
+</section>`;
 
   return layout(site, {
     title: `${a.name}: links`,
@@ -426,6 +532,8 @@ export function linksPage(site) {
     path: "links.html",
     current: "links",
     body,
+    bodyClass: "page-links",
+    bare: true,
   });
 }
 
@@ -435,9 +543,12 @@ export function notFoundPage(site) {
     description: site.site.description,
     path: "404.html",
     current: "",
-    body: `<section class="section"><div class="wrap narrow center">
-      <p class="eyebrow">404</p><h1>This page isn't here</h1>
-      <p class="lead">It may have moved. Try the <a href="index.html">home page</a> or the <a href="links.html">links</a>.</p>
+    bodyClass: "page-404",
+    body: `<section class="nf" data-liquid><div class="wrap">
+      <p class="label">Error 404</p>
+      ${split("h1", "Lost in the <em>score</em>.", { cls: "nf-title display" })}
+      <p class="lead">This page isn't here. It may have moved.</p>
+      <div class="actions">${button("index.html", "Home", { cls: "primary", iconHtml: icon.arrow })}${button("links.html", "Links", { iconHtml: icon.arrow })}</div>
     </div></section>`,
   });
 }

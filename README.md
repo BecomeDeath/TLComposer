@@ -2,22 +2,45 @@
 
 The website of Tobias Lauritsen, orchestral composer, live at **https://becomedeath.github.io/TLComposer/**: music, socials and [PromptMIDI](https://github.com/BecomeDeath/PromptMIDI). It has a home page (music, PromptMIDI, about, contact), a PromptMIDI page (examples to listen to, features, downloads, questions) and a link-in-bio page (`links.html`).
 
-It's a static site with no dependencies: a small Node script turns `site.json` into plain HTML in `dist/`.
+It's a static site with no build dependencies: a small Node script turns `site.json` into plain HTML in `dist/`.
+
+## What moves
+
+- **The liquid**: a WebGL shader behind the hero, PromptMIDI and contact sections. It stirs under the pointer, drifts as you scroll and swells with the music when the demo plays. Without WebGL it falls back to soft CSS gradients; slow devices get a lower resolution automatically.
+- **Smooth scrolling** ([Lenis](https://github.com/darkroomengineering/lenis), in `assets/vendor/`), headings that rise word by word, a statement that lights up as you read it, the latest release growing to full width, a marquee that speeds up with your scroll.
+- **Interaction**: a custom cursor with labels (Play, Write…), magnetic buttons, button fills that grow from the pointer, work titles that show their cover as a liquid preview, videos in a lightbox, a curtain between pages.
+- **The PromptMIDI demo**: each example's real notes, drawn in time with its audio. Pick a prompt, press Play.
+- **Sound** (off by default): hovering links plays soft notes from a D major pentatonic scale.
+
+Everything still works without JavaScript, and visitors who prefer reduced motion get a still page with the same content.
 
 ## Editing
 
 Everything on the site comes from **`site.json`**:
 
-- `artist`: name, tagline, intro, bio paragraphs, photo (a path like `assets/img/me.jpg` or a URL), location.
-- `contact.email`: shown as a button (leave empty to hide it).
+- `artist`: name, tagline, intro, `statement` (the large sentence under About), bio paragraphs, photo (a path like `assets/img/me.jpg` or a URL), location, `timezone` (for the clock in the footer) and `focus`.
+- `contact`: `heading` (the big line above the email), `email` (leave empty to hide it) and a short note.
+- `marquee`: the words in the moving band between Music and PromptMIDI.
 - `socials`: paste your profile URLs; empty ones are left out. Platforms: spotify, applemusic, soundcloud, youtube, bandcamp, instagram, tiktok, x, threads, bluesky, discord, twitch, patreon, github, facebook.
 - `music.releases`: title, type, date, cover (path or URL), description, the links per platform, and `embed`: paste a Spotify, YouTube, SoundCloud or Apple Music share link (or a Bandcamp *EmbeddedPlayer* link) to show a player. Players load only when a visitor presses Play, so nothing is fetched from those services before that. Mark one release `"featured": true` to put it at the top.
-- `promptmidi`: the plug-in page: features, audio examples (`assets/audio/`), download links, requirements and questions.
+- `promptmidi`: the plug-in page: statement, features, audio examples, download links, requirements and questions.
 - `site.url`: the address the site ends up at (for social-media previews, the sitemap and search engines).
 
 Text that still starts with `TODO` is a placeholder: it's hidden on the page, and the build lists what's left to fill in.
 
 Put images in `assets/img/` (square covers around 1000 × 1000; a portrait photo around 800 × 1000).
+
+## PromptMIDI examples
+
+Each example in `promptmidi.examples` has an audio file (`assets/audio/<name>.mp3`) and its notes (`assets/rolls/<name>.json`), which the demo draws in time with the audio. Both come from the plug-in itself. To add or change an example, edit its prompt in `site.json` and render it with a PromptMIDI build and ffmpeg:
+
+```bash
+PROMPTMIDI_CLI=path/to/promptmidi-cli \
+PROMPTMIDI_RENDER=path/to/promptmidi_render_preview \
+node tools/make-examples.mjs            # all examples, or name some: ... soft-piano lofi
+```
+
+An example's `seed` (default 7) picks the take.
 
 ## Preview and build
 
@@ -39,5 +62,7 @@ All links are relative, so the site works both at the root of a domain and in a 
 ## Credits
 
 - [Inter](https://rsms.me/inter/) typeface (SIL Open Font License, `assets/fonts/Inter-OFL.txt`), subset to Latin.
+- [Instrument Serif](https://github.com/Instrument/instrument-serif) typeface (SIL Open Font License, `assets/fonts/InstrumentSerif-OFL.txt`), via Fontsource.
+- [Lenis](https://github.com/darkroomengineering/lenis) 1.3.26 smooth scrolling (MIT, `assets/vendor/LENIS-LICENSE.txt`).
 - Brand icons from [Simple Icons](https://simpleicons.org) (CC0); the logos belong to their owners and are used only to link to the profiles.
 - The audio examples were rendered by PromptMIDI's preview with the GeneralUser GS SoundFont by S. Christian Collins.
