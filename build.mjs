@@ -32,7 +32,7 @@ function resolveEmbed(url) {
     return { label: "YouTube", src: `https://www.youtube-nocookie.com/embed/videoseries?list=${m[1]}`, height: 0 };
 
   if (/^https:\/\/(www\.|m\.)?soundcloud\.com\//.test(u))
-    return { label: "SoundCloud", src: `https://w.soundcloud.com/player/?url=${encodeURIComponent(u)}&color=%237d6ff7&auto_play=false&visual=false`, height: /\/sets\//.test(u) ? 300 : 166 };
+    return { label: "SoundCloud", src: `https://w.soundcloud.com/player/?url=${encodeURIComponent(u)}&color=%23d9a441&auto_play=false&visual=false`, height: /\/sets\//.test(u) ? 300 : 166 };
 
   if (/^https:\/\/music\.apple\.com\//.test(u))
     return { label: "Apple Music", src: u.replace("https://music.apple.com/", "https://embed.music.apple.com/"), height: /[?&]i=/.test(u) ? 175 : 450 };
@@ -101,7 +101,7 @@ export function build({ quiet = false } = {}) {
 
   writeFileSync(join(dist, ".nojekyll"), "");
   writeFileSync(join(dist, "assets", "img", "favicon.svg"),
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a99bff"/><stop offset="1" stop-color="#5141c9"/></linearGradient></defs><rect width="28" height="28" rx="7" fill="url(#g)"/><ellipse cx="11.75" cy="18.75" rx="4.25" ry="3.25" fill="#fff"/><rect x="14.6" y="6" width="1.8" height="13" fill="#fff"/><rect x="14.6" y="6" width="6.5" height="1.8" fill="#fff"/></svg>`);
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7a1424"/><stop offset="1" stop-color="#2a070d"/></linearGradient></defs><rect width="28" height="28" rx="7" fill="url(#g)"/><ellipse cx="11.6" cy="19" rx="4.4" ry="3.2" transform="rotate(-24 11.6 19)" fill="#e2b25a"/><rect x="15" y="5.5" width="1.8" height="13.6" fill="#e2b25a"/><path d="M15.9 5.5c.4 2.3 2.1 3.3 3.5 4.6 1.6 1.5 2 3.6 1.2 5.8-.2-2.2-1.4-3.7-3.4-4.4-.4-.1-.8-.2-1.3-.2z" fill="#e2b25a"/></svg>`);
 
   if (site.site.url) {
     const base = site.site.url.replace(/\/?$/, "/");
