@@ -75,6 +75,14 @@ function button(href, label, { cls = "", iconHtml = "", external = false, attrs 
   return `<a class="button ${cls}" href="${esc(href)}"${external ? ' target="_blank" rel="noopener"' : ""} data-magnetic ${attrs}><span class="button-fill" aria-hidden="true"></span>${roll(label)}${iconHtml ? `<span class="button-icon">${iconHtml}</span>` : ""}</a>`;
 }
 
+/** The installers by system ({ windows, macos, linux }), for the "Download free" buttons: main.js
+    points the button at the visitor's own installer, and without it the button opens the list. */
+function installers(p) {
+  const map = {};
+  for (const d of p.downloads || []) if (d.os && safeUrl(d.url)) map[d.os] = { url: safeUrl(d.url), label: d.label, file: d.file || "" };
+  return Object.keys(map).length ? `data-installers="${esc(JSON.stringify(map))}"` : "";
+}
+
 function cover(release, cls = "cover", { lazy = true, sizes = "" } = {}) {
   if (!safeUrl(release.cover)) return `<div class="${cls} cover-placeholder" aria-hidden="true"><span>${esc(initials(text(release.title, "New release")))}</span></div>`;
   const [w, h] = release.wide ? [1280, 720] : [600, 600];
@@ -364,7 +372,7 @@ ${featured ? `<section class="showcase solid" id="work" aria-labelledby="showcas
       <p class="muted" data-reveal>${esc(p.summary)}</p>
       <ul class="pm-points" data-reveal>${p.features.slice(0, 3).map((f) => `<li>${icon.check}<span><strong>${esc(f.title)}.</strong> ${esc(f.text)}</span></li>`).join("")}</ul>
       <div class="actions" data-reveal>
-        ${button("promptmidi.html#download", "Download free", { cls: "primary", iconHtml: icon.download })}
+        ${button("promptmidi.html#download", "Download free", { cls: "primary", iconHtml: icon.download, attrs: installers(p) })}
         ${button("promptmidi.html", "See what it does", { iconHtml: icon.arrow })}
       </div>
     </div>
@@ -412,7 +420,7 @@ export function promptmidiPage(site) {
     ${split("h1", esc(p.name), { cls: "pm-hero-title", mode: "chars" })}
     <p class="lead pm-hero-lead" data-reveal>${esc(p.tagline)}</p>
     <div class="actions" data-reveal>
-      ${button("#download", "Download free", { cls: "primary", iconHtml: icon.download })}
+      ${button("#download", "Download free", { cls: "primary", iconHtml: icon.download, attrs: installers(p) })}
       ${button("#listen", "Hear examples", { iconHtml: icon.play })}
     </div>
   </div>
@@ -467,12 +475,19 @@ export function promptmidiPage(site) {
       ${split("h2", "Get PromptMIDI", { cls: "display", id: "download-h" })}
       <p class="section-intro" data-reveal>${esc(p.requirements)}</p>
     </div>
-    <ul class="downloads">${p.downloads.filter((d) => safeUrl(d.url)).map((d, i) => `<li data-reveal style="--i:${i}"><a class="download-card spot" href="${esc(safeUrl(d.url))}" target="_blank" rel="noopener" data-cursor="Get" data-sound>
+    <ul class="downloads">${p.downloads.filter((d) => safeUrl(d.url)).map((d, i) => `<li data-reveal style="--i:${i}"><a class="download-card spot" href="${esc(safeUrl(d.url))}"${d.os ? ` data-os="${esc(d.os)}"` : ""}${d.file ? ` data-file="${esc(d.file)}"` : ""} data-cursor="Get" data-sound>
+      <span class="download-yours" hidden>Your system</span>
       <span class="download-os">${esc(d.label)}</span>
       <span class="download-detail">${esc(d.detail)}</span>
+      ${d.file ? `<span class="download-file">${esc(d.file)}</span>` : ""}
       <span class="download-icon">${icon.download}</span>
     </a></li>`).join("")}</ul>
-    <p class="small muted" data-reveal>Copy the whole <code>PromptMIDI.vst3</code> folder into your VST3 folder and rescan plug-ins. ${safeUrl(p.repo) ? `Source code, build instructions and the full guide are on <a class="text-link" href="${esc(safeUrl(p.repo))}" target="_blank" rel="noopener">GitHub</a>.` : ""}</p>
+    <div class="install-notes" data-reveal>
+      ${p.install ? `<p>${esc(p.install)}</p>` : ""}
+      ${p.updates ? `<p>${esc(p.updates)}</p>` : ""}
+      ${p.unsigned ? `<p class="small muted">${esc(p.unsigned)}</p>` : ""}
+      ${safeUrl(p.repo) ? `<p class="small muted">Source code, build instructions and the full guide are on <a class="text-link" href="${esc(safeUrl(p.repo))}" target="_blank" rel="noopener">GitHub</a>.</p>` : ""}
+    </div>
   </div>
 </section>
 
