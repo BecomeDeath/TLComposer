@@ -819,6 +819,64 @@ void main(){
   }
 
   //============================================================================
+  // Downloads: "Download free" fetches the installer for the visitor's system. On a phone or an
+  // unknown system it keeps pointing at the list of installers.
+
+  function visitorOS() {
+    const ua = navigator.userAgent || "";
+    const platform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "";
+    if (/Android|iPhone|iPad|iPod|CrOS/i.test(ua) || /Android|Chrome OS/i.test(platform)) return "";
+    if (/Mac/i.test(platform) && navigator.maxTouchPoints > 1) return "";   // an iPad asking for the desktop site
+    if (/Win/i.test(platform) || /Windows/.test(ua)) return "windows";
+    if (/Mac/i.test(platform) || /Mac OS X/.test(ua)) return "macos";
+    if (/Linux/i.test(platform) || /Linux|X11/.test(ua)) return "linux";
+    return "";
+  }
+
+  const os = visitorOS();
+
+  let toast, toastTimer;
+  function downloadStarted(file) {
+    if (!toast) {
+      toast = document.createElement("div");
+      toast.className = "toast";
+      toast.setAttribute("role", "status");
+      document.body.append(toast);
+    }
+    toast.textContent = file
+      ? `Downloading ${file}. Open it when it's done to install PromptMIDI.`
+      : "Your download has started.";
+    toast.classList.add("is-on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("is-on"), 7000);
+  }
+
+  $$("[data-installers]").forEach((a) => {
+    let map = {};
+    try { map = JSON.parse(a.dataset.installers); } catch (err) { return; }
+    const mine = map[os];
+    if (!mine || !mine.url) return;
+    a.href = mine.url;
+    a.dataset.file = mine.file || "";
+    const text = `Download for ${mine.label}`;
+    $$("[data-text]", a).forEach((s) => { s.dataset.text = text; s.textContent = text; });
+    a.setAttribute("aria-label", `${text} (${mine.file || "installer"})`);
+  });
+
+  $$(".download-card[data-os]").forEach((card) => {
+    if (card.dataset.os !== os) return;
+    card.classList.add("is-yours");
+    const badge = $(".download-yours", card);
+    if (badge) badge.hidden = false;
+  });
+
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest("a[data-file]");
+    if (!a || e.button !== 0 || !a.dataset.file || !/^https:/.test(a.href)) return;
+    downloadStarted(a.dataset.file);
+  });
+
+  //============================================================================
   // The PromptMIDI demo
 
   $$("[data-demo]").forEach((box) => {
