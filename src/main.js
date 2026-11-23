@@ -1,10 +1,10 @@
 // Motion and interaction. Everything here is an enhancement: without it the pages still work
 // (links open YouTube, the demo has plain players, all content is visible).
 //
-//   - the living score: a WebGL liquid with the staves of an orchestral score flowing over it.
-//     Sweep across the staves (or tap them on a phone) to pluck them: they ring, a note is
-//     written where you touched, and with sound on each staff plays like an orchestral section.
-//     Short phrases write themselves now and then, and the staves play along with the demo.
+//   - the stage: a red velvet curtain behind the hero, PromptMIDI and contact sections, with one
+//     spotlight and dust in its beam. The light follows the pointer, or finds the heading of the
+//     section you're reading; the curtain sways as the page moves; the light swells with the
+//     PromptMIDI demo's music.
 //   - smooth scrolling with a mouse or trackpad (Lenis); phones keep their own native scrolling
 //   - a notehead cursor with labels, magnetic buttons, fills that grow from the pointer
 //   - headings that rise word by word, a statement that lights up as you read it
@@ -114,9 +114,9 @@
   $(".to-top")?.addEventListener("click", () => scrollToY(0));
 
   //============================================================================
-  // The fixed layers (liquid and staves) and when they're on screen
+  // The fixed stage layer and when it's on screen
 
-  const layer = $(".liquid");
+  const layer = $(".stage");
 
   // Sized to the largest viewport (100lvh), so a phone's address bar sliding in and out never
   // resizes them. A change of size is picked up inside the frame loop, never between frames,
@@ -133,8 +133,8 @@
 
   // Only drawn while a section that shows them is on screen.
   const showing = new Set();
-  const liquidIO = new IntersectionObserver((es) => { es.forEach((e) => (e.isIntersecting ? showing.add(e.target) : showing.delete(e.target))); });
-  $$("[data-liquid]").forEach((s) => liquidIO.observe(s));
+  const stageIO = new IntersectionObserver((es) => { es.forEach((e) => (e.isIntersecting ? showing.add(e.target) : showing.delete(e.target))); });
+  $$("[data-stage]").forEach((s) => stageIO.observe(s));
   const layerVisible = () => showing.size > 0 && !document.hidden;
 
   //============================================================================
@@ -152,182 +152,17 @@
   }
 
   //============================================================================
-  // The liquid (WebGL)
+  // Shared between the music and the picture: how much is going on (the demo's notes) and
+  // short pulses (a note played), which brighten the spotlight.
 
-  const liquid = (() => {
-    const api = { pulse: 0, level: () => 0, kick(v) { this.pulse = Math.min(1.2, this.pulse + v); } };
-    const canvas = layer && $(".liquid-gl", layer);
-    if (!canvas) return api;
-
-    let gl = null;
-    try { gl = canvas.getContext("webgl", { alpha: false, antialias: false, depth: false, stencil: false, premultipliedAlpha: false, powerPreference: fine ? "high-performance" : "default" }); } catch (e) { gl = null; }
-    if (!gl) return api;
-
-    const vert = "attribute vec2 p;varying vec2 vUv;void main(){vUv=p*.5+.5;gl_Position=vec4(p,0.,1.);}";
-    // Phones get one octave less: the look is the same, the cost a quarter lower.
-    const frag = `precision highp float;
-#define OCTAVES ${fine ? 4 : 3}
-varying vec2 vUv;
-uniform vec2 uRes; uniform float uTime; uniform vec2 uMouse; uniform vec2 uVel;
-uniform float uEnergy; uniform float uPulse; uniform float uScroll; uniform float uLight;
-uniform vec3 uC0; uniform vec3 uC1; uniform vec3 uC2; uniform vec3 uC3;
-
-float hash(vec2 p){ vec3 p3 = fract(vec3(p.xyx) * .1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
-float noise(vec2 p){
-  vec2 i = floor(p), f = fract(p);
-  vec2 u = f * f * f * (f * (f * 6. - 15.) + 10.);
-  return mix(mix(hash(i), hash(i + vec2(1., 0.)), u.x), mix(hash(i + vec2(0., 1.)), hash(i + vec2(1., 1.)), u.x), u.y);
-}
-const mat2 M = mat2(1.6, 1.2, -1.2, 1.6);
-float fbm(vec2 p){ float v = 0., a = .5; for (int i = 0; i < OCTAVES; i++) { v += a * noise(p); p = M * p + 3.1; a *= .5; } return v; }
-float field(vec2 p, float t, out vec2 q, out vec2 r){
-  q = vec2(fbm(p + vec2(0., t * .6)), fbm(p + vec2(5.2, 1.3) - t * .4));
-  r = vec2(fbm(p + 3.4 * q + vec2(1.7, 9.2) + t * .5), fbm(p + 3.4 * q + vec2(8.3, 2.8) - t * .3));
-  return fbm(p + 2.8 * r);
-}
-void main(){
-  float asp = uRes.x / uRes.y;
-  vec2 p = (vUv - .5) * vec2(asp, 1.) * 1.5;
-  vec2 m = (uMouse - .5) * vec2(asp, 1.) * 1.5;
-  vec2 d = p - m;
-  float fall = exp(-dot(d, d) * 2.4);
-  float ang = (.6 + 3. * length(uVel)) * fall;
-  float s = sin(ang), c = cos(ang);
-  p = m + mat2(c, -s, s, c) * d;
-  p -= uVel * fall * 1.2;
-  p += normalize(d + 1e-4) * sin(length(d) * 16. - uTime * 5.) * .025 * uPulse * exp(-length(d) * 1.4);
-  p.y -= uScroll * .25;
-  float t = uTime * (.045 + .07 * uEnergy) + uScroll * .15;
-  vec2 q, r, q2, r2;
-  vec2 P = p * 1.15;
-  float h = field(P, t, q, r);
-  float e = .01;
-  float hx = field(P + vec2(e, 0.), t, q2, r2);
-  float hy = field(P + vec2(0., e), t, q2, r2);
-  vec3 n = normalize(vec3((h - hx) / e, (h - hy) / e, 2.2));
-  vec3 L = normalize(vec3(-.45, .6, .75));
-  float diff = clamp(dot(n, L), 0., 1.);
-  float spec = pow(clamp(dot(reflect(-L, n), vec3(0., 0., 1.)), 0., 1.), 22.);
-
-  vec3 col = mix(uC0, uC1, smoothstep(.22, .82, h));
-  col = mix(col, uC2, smoothstep(.58, 1.12, length(q)) * (.62 + .3 * uEnergy));
-  float vein = smoothstep(.5, .78, r.x) * smoothstep(.45, .95, h);
-  col = mix(col, uC3, vein * (.42 + .45 * uEnergy));
-  col *= mix(.62 + .55 * diff, .9 + .14 * diff, uLight);
-  col += spec * mix(uC3, vec3(1.), .6) * (.22 + .45 * uEnergy) * (1. - .55 * uLight);
-
-  vec2 v = vUv - .5;
-  col = mix(col, uC0, smoothstep(.2, 1., dot(v, v) * 1.7) * .75);
-  gl_FragColor = vec4(col, 1.);
-}`;
-
-    let U = {}, ok = false;
-    function init() {
-      const compile = (type, src) => {
-        const sh = gl.createShader(type);
-        gl.shaderSource(sh, src);
-        gl.compileShader(sh);
-        if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) { console.warn(gl.getShaderInfoLog(sh)); return null; }
-        return sh;
-      };
-      const vs = compile(gl.VERTEX_SHADER, vert), fs = compile(gl.FRAGMENT_SHADER, frag);
-      if (!vs || !fs) return false;
-      const prog = gl.createProgram();
-      gl.attachShader(prog, vs);
-      gl.attachShader(prog, fs);
-      gl.bindAttribLocation(prog, 0, "p");
-      gl.linkProgram(prog);
-      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return false;
-      gl.useProgram(prog);
-      const buf = gl.createBuffer();
-      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-      gl.enableVertexAttribArray(0);
-      gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-      U = {};
-      for (const n of ["uRes", "uTime", "uMouse", "uVel", "uEnergy", "uPulse", "uScroll", "uLight", "uC0", "uC1", "uC2", "uC3"]) U[n] = gl.getUniformLocation(prog, n);
-      colorsDirty = true;
-      sized = -1;
-      return true;
-    }
-
-    const hex = (h) => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ""); const n = m ? parseInt(m[1], 16) : 0; return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; };
-    let colorsDirty = true, sized = -1, quality = 1;
-    function colors() {
-      [0, 1, 2, 3].forEach((i) => gl.uniform3fv(U[`uC${i}`], hex(css(`--liquid-${i}`))));
-      gl.uniform1f(U.uLight, root.dataset.theme === "light" ? 1 : 0);
-      colorsDirty = false;
-    }
-    function size() {
-      const k = (fine ? 0.5 : 0.4) * quality;
-      const cap = Math.min(1, 1000 / Math.max(1, view.w * k));
-      const w = Math.max(2, Math.round(view.w * k * cap)), h = Math.max(2, Math.round(view.h * k * cap));
-      if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
-      gl.viewport(0, 0, w, h);
-      gl.uniform2f(U.uRes, w, h);
-      sized = view.version;
-    }
-
-    new MutationObserver(() => { colorsDirty = true; }).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
-
-    const mouse = { x: 0.62, y: 0.55, tx: 0.62, ty: 0.55, vx: 0, vy: 0 };
-    addEventListener("pointermove", (e) => { mouse.tx = e.clientX / Math.max(1, view.w); mouse.ty = 1 - e.clientY / Math.max(1, view.h); }, { passive: true });
-
-    let energy = 0, time = 8 + Math.random() * 40, drawnOnce = false;
-    function draw() {
-      if (sized !== view.version) size();
-      if (colorsDirty) colors();
-      gl.uniform1f(U.uTime, time);
-      gl.uniform2f(U.uMouse, mouse.x, mouse.y);
-      gl.uniform2f(U.uVel, mouse.vx, mouse.vy);
-      gl.uniform1f(U.uEnergy, energy);
-      gl.uniform1f(U.uPulse, api.pulse);
-      gl.uniform1f(U.uScroll, scroll.y / Math.max(1, view.h));
-      gl.drawArrays(gl.TRIANGLES, 0, 3);
-      drawnOnce = true;
-    }
-
-    // Android can drop the GPU context when the browser goes to the background: build it again.
-    canvas.addEventListener("webglcontextlost", (e) => { e.preventDefault(); ok = false; layer.classList.remove("on"); });
-    canvas.addEventListener("webglcontextrestored", () => { ok = init(); if (ok) layer.classList.add("on"); });
-
-    ok = init();
-    if (!ok) return api;
-    layer.classList.add("on");
-
-    // If the device struggles (frames over ~22 ms on average), draw the liquid at a lower resolution.
-    let slow = 0, frames = 0;
-    tickers.add((t, dt) => {
-      if (!ok) return;
-      if (reduce) {   // one still frame, redrawn only when the size or theme changes
-        if (!drawnOnce || sized !== view.version || colorsDirty) draw();
-        return;
-      }
-      if (!layerVisible()) return;
-      if (quality > 0.5 && ++frames > 40) {
-        slow = slow * 0.95 + (dt > 22 ? 1 : 0) * 0.05;
-        if (slow > 0.6) { quality = Math.max(0.5, quality * 0.75); slow = 0; frames = 0; sized = -1; }
-      }
-      const nx = damp(mouse.x, mouse.tx, 3.2, dt), ny = damp(mouse.y, mouse.ty, 3.2, dt);
-      mouse.vx = damp(mouse.vx, (nx - mouse.x) * (1000 / Math.max(1, dt)) * 0.12, 6, dt);
-      mouse.vy = damp(mouse.vy, (ny - mouse.y) * (1000 / Math.max(1, dt)) * 0.12, 6, dt);
-      mouse.x = nx; mouse.y = ny;
-      energy = damp(energy, clamp(api.level(), 0, 1), 8, dt);
-      api.pulse = api.pulse * Math.exp(-dt / 700);
-      time += dt / 1000 * (1 + Math.min(2.5, Math.abs(scroll.v) * 0.04));
-      if (!Number.isFinite(time)) time = 10;
-      if (!Number.isFinite(energy)) energy = 0;
-      draw();
-    });
-    return api;
-  })();
+  const fx = { pulse: 0, level: () => 0, kick(v) { fx.pulse = Math.min(1.2, fx.pulse + v); } };
 
   //============================================================================
-  // Sound (off unless the visitor turns it on): hover notes and the plucked staves.
+  // Sound (off unless the visitor turns it on): soft notes when hovering links.
 
   const sound = (() => {
     const toggles = $$("[data-sound-toggle]");
-    let on = store.get("sound") === "on", out = null, lastHover = 0, lastPluck = 0;
+    let on = store.get("sound") === "on", out = null, lastHover = 0;
     const pentatonic = [62, 64, 66, 69, 71, 74, 76, 78, 81, 83];   // D major pentatonic
 
     function bus(ctx) {
@@ -343,13 +178,9 @@ void main(){
       return out;
     }
 
-    // One voice. "bell" for the interface; the staves sound like the sections of an orchestra.
+    // One voice: a soft bell.
     const voices = {
       bell:   { parts: [[1, 1, "sine"], [2, 0.22, "sine"], [3.01, 0.06, "triangle"]], attack: 0.006, decay: 1.8, gain: 0.5 },
-      flute:  { parts: [[1, 1, "sine"], [2, 0.08, "sine"]], attack: 0.045, decay: 1.3, gain: 0.42, vibrato: 5.2 },
-      reed:   { parts: [[1, 0.7, "square"], [1, 0.4, "triangle"]], attack: 0.02, decay: 0.9, gain: 0.16, filter: 1700 },
-      brass:  { parts: [[1, 0.8, "sawtooth"], [0.5, 0.25, "sine"]], attack: 0.03, decay: 1.0, gain: 0.17, filter: 1300, sweep: true },
-      pizz:   { parts: [[1, 1, "triangle"], [2, 0.18, "sine"]], attack: 0.003, decay: 0.8, gain: 0.5, filter: 2600, sweep: true },
     };
 
     function voice(midi, vel, kind) {
@@ -389,19 +220,7 @@ void main(){
       if (now - lastHover < 45) return;
       lastHover = now;
       voice(pentatonic[((i % pentatonic.length) + pentatonic.length) % pentatonic.length], vel, "bell");
-      liquid.kick(0.2);
-    }
-
-    // A score of eight staves, top to bottom like an orchestral page: flutes, oboes, clarinets,
-    // horns, trumpets, violins, violas, cellos. The five lines of each staff climb its pentatonic.
-    const sections = [[86, "flute"], [81, "flute"], [74, "reed"], [69, "brass"], [64, "brass"], [62, "pizz"], [57, "pizz"], [50, "pizz"]];
-    function string(staff, line, vel) {
-      if (!on) return;
-      const now = performance.now();
-      if (now - lastPluck < 28) return;
-      lastPluck = now;
-      const [base, kind] = sections[((staff % 8) + 8) % 8];
-      voice(base + [0, 2, 4, 7, 9][4 - line], clamp(vel, 0.3, 1), kind);
+      fx.kick(0.2);
     }
 
     function set(v, chime = true) {
@@ -412,9 +231,6 @@ void main(){
       $$(".sound-state").forEach((s) => { s.textContent = on ? "on" : "off"; });
       if (on && chime) { getAudio(); hover(0); setTimeout(() => hover(2, 0.8), 90); setTimeout(() => hover(4, 0.7), 180); }
     }
-
-    // On a phone the staves are tapped, not swept.
-    if (!fine) $$(".score-hint-text span").forEach((el) => { el.textContent = el.textContent.replace("sweep across", "tap"); });
 
     set(on, false);
     toggles.forEach((b) => b.addEventListener("click", () => set(!on)));
@@ -430,310 +246,195 @@ void main(){
       const group = el.parentElement?.parentElement ? $$("[data-sound]", el.parentElement.parentElement) : [el];
       hover(Math.max(0, group.indexOf(el)) + 2, 0.75);
     });
-    return { hover, string, get on() { return on; } };
+    return { hover, get on() { return on; } };
   })();
 
   //============================================================================
-  // The staves: an orchestral score drawn over the liquid (2D canvas, sharp at any density)
+  // The stage (WebGL): a red velvet curtain in deep folds, one spotlight from above and dust
+  // drifting in its beam. The light follows the pointer; otherwise it finds the heading of the
+  // section you're reading. The curtain sways when the page moves, and the light swells with
+  // the PromptMIDI demo's music.
 
-  const staves = (() => {
-    const api = { excite() {} };
-    const canvas = layer && $(".staves", layer);
-    const ctx = canvas?.getContext("2d");
-    if (!ctx) return api;
+  const stage = (() => {
+    const canvas = layer && $(".stage-gl", layer);
+    if (!canvas) return null;
 
-    let W = 0, H = 0, dpr = 1, sized = -1;
-    let s = 9, P = 90, A = 14;          // line spacing, staff period, how far the liquid bends the lines
-    const drift = 0.32;                 // the score moves at a third of the scroll speed
-    let t = 0, scoreX = 0;              // time in seconds; the score creeps left, like a page being played
-    let ink = "#f2efe9", warm = "#ffb877", base = 0.1, colorsDirty = true;
+    let gl = null;
+    try { gl = canvas.getContext("webgl", { alpha: false, antialias: false, depth: false, stencil: false, premultipliedAlpha: false, powerPreference: fine ? "high-performance" : "default" }); } catch (e) { gl = null; }
+    if (!gl) return null;
 
-    const readColors = () => {
-      ink = css("--fg") || ink;
-      warm = css("--warm") || warm;
-      base = root.dataset.theme === "light" ? 0.2 : 0.17;
+    const vert = "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}";
+    const frag = `precision highp float;
+uniform vec2 uRes; uniform float uT; uniform vec2 uSpot; uniform float uFolds; uniform float uSway;
+uniform float uEnergy; uniform float uPulse; uniform float uLight;
+uniform vec3 uC0; uniform vec3 uC1; uniform vec3 uC2; uniform vec3 uC3;
+
+float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float noise(vec2 p){ vec2 i = floor(p), f = fract(p); vec2 u = f * f * (3. - 2. * f);
+  return mix(mix(hash(i), hash(i + vec2(1., 0.)), u.x), mix(hash(i + vec2(0., 1.)), hash(i + vec2(1., 1.)), u.x), u.y); }
+
+void main(){
+  vec2 uv = gl_FragCoord.xy / uRes;
+  float asp = uRes.x / uRes.y;
+  vec2 p = vec2(uv.x * asp, uv.y);
+
+  // The curtain: deep folds, swaying a little, more when the page moves.
+  float ph = (uv.x * uFolds + (.06 + uSway) * sin(uT * .5 + uv.y * 2.2) * (1.2 - uv.y) + .04 * sin(uT * .31 + uv.x * 5.)) * 6.2832;
+  float fold = sin(ph) + .45 * sin(ph * 2.13 + 1.7) + .18 * sin(ph * 4.7 + .4);
+  float slope = cos(ph) + .96 * cos(ph * 2.13 + 1.7) + .85 * cos(ph * 4.7 + .4);
+  vec3 n = normalize(vec3(-slope * .32, 0., 1.));
+
+  // The spotlight: a cone from above the stage, aimed at uSpot.
+  vec2 src = vec2(asp * .5 + (uSpot.x - asp * .5) * .35, 1.5);
+  vec2 dir = normalize(uSpot - src), rel = p - src;
+  float along = dot(rel, dir), across = length(rel - dir * along);
+  float spread = .03 + along * (.2 + .04 * uEnergy);
+  float cone = smoothstep(spread, spread * .45, across) * smoothstep(.1, .5, along);
+  float haze = cone * (.5 + .5 * noise(vec2(p.x * 4. - uT * .12, p.y * 2.5 + uT * .2)));
+  float pool = exp(-pow(length((p - uSpot) * vec2(1., 1.2)) / (spread * 1.25 + .06), 2.));
+  vec3 L = normalize(vec3(src - p, 1.1));
+  float diff = clamp(dot(n, L), 0., 1.);
+  float rim = pow(1. - n.z, 1.5) * 2.2;
+  float light = (1. + .45 * uEnergy + .5 * uPulse) * mix(1., .4, uLight);
+
+  vec3 velvet = mix(uC1, uC2, clamp(.42 + .3 * fold, 0., 1.));
+  vec3 col = velvet * (mix(.28, .78, uLight) + .3 * diff) + velvet * rim * .22;
+  col += velvet * pool * (1.3 * diff + .9 * rim) * 1.9 * light;
+  col += uC3 * pool * pow(diff, 6.) * .2 * light;
+
+  // Dust drifting in the beam.
+  vec2 dp = p * 30. + vec2(sin(uT * .2) * 2., -uT * (.5 + .4 * uEnergy));
+  vec2 cell = floor(dp), fp = fract(dp);
+  vec2 star = vec2(hash(cell), hash(cell + 7.1)) * .8 + .1;
+  float tw = .5 + .5 * sin(uT * (1. + hash(cell + 3.) * 2.) + hash(cell) * 6.28);
+  float mote = smoothstep(.07, 0., length(fp - star)) * step(.6 - .12 * uEnergy, hash(cell + 11.)) * tw;
+  col += uC3 * (haze * .24 * light + mote * cone * (.9 + uPulse) * mix(1., .5, uLight));
+
+  // The floor of the stage is darker; the edges fall away into the hall.
+  col *= mix(.5 + .5 * smoothstep(0., .28, uv.y), 1., uLight);
+  vec2 v = uv - vec2(.55, .5);
+  col = mix(col, uC0, clamp(dot(v, v) * .9, 0., 1.));
+  gl_FragColor = vec4(min(col, vec3(1.)), 1.);
+}`;
+
+    let U = {}, ok = false, colorsDirty = true, sized = -1, quality = 1;
+    function init() {
+      const compile = (type, src) => {
+        const sh = gl.createShader(type);
+        gl.shaderSource(sh, src);
+        gl.compileShader(sh);
+        if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) { console.warn(gl.getShaderInfoLog(sh)); return null; }
+        return sh;
+      };
+      const vs = compile(gl.VERTEX_SHADER, vert), fs = compile(gl.FRAGMENT_SHADER, frag);
+      if (!vs || !fs) return false;
+      const prog = gl.createProgram();
+      gl.attachShader(prog, vs);
+      gl.attachShader(prog, fs);
+      gl.bindAttribLocation(prog, 0, "p");
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return false;
+      gl.useProgram(prog);
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      gl.enableVertexAttribArray(0);
+      gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+      U = {};
+      for (const n of ["uRes", "uT", "uSpot", "uFolds", "uSway", "uEnergy", "uPulse", "uLight", "uC0", "uC1", "uC2", "uC3"]) U[n] = gl.getUniformLocation(prog, n);
       colorsDirty = true;
-    };
-    readColors();
-    new MutationObserver(readColors).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
+      sized = -1;
+      return true;
+    }
 
+    const hex = (h) => { const m = /^#?([0-9a-f]{6})$/i.exec(h || ""); const n = m ? parseInt(m[1], 16) : 0; return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; };
+    function colors() {
+      [0, 1, 2, 3].forEach((i) => gl.uniform3fv(U[`uC${i}`], hex(css(`--stage-${i}`))));
+      gl.uniform1f(U.uLight, root.dataset.theme === "light" ? 1 : 0);
+      colorsDirty = false;
+    }
     function size() {
-      dpr = Math.min(2, window.devicePixelRatio || 1);
-      W = view.w; H = view.h;
-      canvas.width = Math.round(W * dpr);
-      canvas.height = Math.round(H * dpr);
-      s = clamp(W * 0.0078, 7, 10.5);
-      P = s * 4 + s * 6.5;
-      A = s * 1.5;
+      const k = (view.w < 700 ? 0.7 : 0.6) * quality;
+      const cap = Math.min(1, 1200 / Math.max(1, view.w * k));
+      const w = Math.max(2, Math.round(view.w * k * cap)), h = Math.max(2, Math.round(view.h * k * cap));
+      if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+      gl.viewport(0, 0, w, h);
+      gl.uniform2f(U.uRes, w, h);
+      // About one fold every 80 CSS pixels, so the velvet looks the same size on a phone and a desktop.
+      gl.uniform1f(U.uFolds, Math.max(5, view.w / 80));
       sized = view.version;
     }
+    new MutationObserver(() => { colorsDirty = true; }).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
 
-    // Smooth value noise: the same flow bends neighbouring lines alike, so each staff moves as one.
-    const perm = new Uint8Array(512);
-    { let x = 2463534242; for (let i = 0; i < 256; i++) { x ^= x << 13; x ^= x >>> 17; x ^= x << 5; perm[i] = perm[i + 256] = (x >>> 0) & 255; } }
-    const fade = (v) => v * v * (3 - 2 * v);
-    function noise(x, y) {
-      const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
-      const X = xi & 255, Y = yi & 255;
-      const a = perm[X + perm[Y]], b = perm[X + 1 + perm[Y]], c = perm[X + perm[Y + 1]], d = perm[X + 1 + perm[Y + 1]];
-      const u = fade(xf), v = fade(yf);
-      return (a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v) / 255;
-    }
-
-    const offset = () => (reduce ? 0 : scroll.y * drift);
-    const restY = (J, k) => J * P + k * s - offset();                  // where line k (0 = top) of staff J rests
-    const flow = (x, J, k) => {
-      const sy = J * P + k * s;
-      return ((noise(x * 0.0024 + t * 0.05, sy * 0.004 - t * 0.025) - 0.5) * 2 + (noise(x * 0.007 - t * 0.09, sy * 0.011 + 3.1) - 0.5) * 0.4) * A;
-    };
-
-    const plucks = [];   // { J, k, x, t0, amp }
-    const notes = [];    // { J, pos (half-steps below the top line, 0..8), sx (score x), t0, life, hot, up, beam }
-    const ptr = { x: -1e4, y: -1e4, lx: -1e4, ly: -1e4, near: 0, inside: false };
-
-    function pluckY(x, J, k, list) {
-      let dy = 0;
-      for (const p of list) {
-        if (p.J !== J || p.k !== k) continue;
-        const age = t - p.t0, dx = Math.abs(x - p.x);
-        dy += p.amp * Math.exp(-age * 3.2) * Math.sin(age * 34 - dx * 0.05) * Math.exp(-dx / (50 + age * 420));
-      }
-      return dy;
-    }
-    // Lines lean a little towards the pointer, like strings under a hand.
-    function lean(x, by) {
-      if (ptr.near < 0.01) return 0;
-      const dx = x - ptr.x, dy = ptr.y - by;
-      return dy * 0.2 * ptr.near * Math.exp(-(dx * dx) / (2 * 120 * 120)) * Math.exp(-(dy * dy) / (2 * (s * 4) * (s * 4)));
-    }
-    const lineY = (x, J, k, live) => restY(J, k) + flow(x, J, k) + (live ? pluckY(x, J, k, plucks) + lean(x, restY(J, k)) : 0);
-
-    function pluck(J, k, x, amp, { silent = false } = {}) {
-      plucks.push({ J, k, x, t0: t, amp: clamp(amp, 2.5, 10) });
-      if (plucks.length > 24) plucks.shift();
-      let sx = x + scoreX;
-      for (let i = notes.length - 1; i >= 0; i--) {
-        const n = notes[i];
-        if (n.hot && n.J === J && t - n.t0 < 0.45 && Math.abs(n.sx - sx) < s * 5) { sx = n.sx; break; }
-      }
-      if (!notes.some((n) => n.hot && n.J === J && n.pos === k * 2 && n.sx === sx && t - n.t0 < 0.45))
-        notes.push({ J, pos: k * 2, sx, t0: t, life: 1.6, hot: true, up: k >= 2 });
-      if (notes.length > 80) notes.shift();
-      if (!silent) sound.string(J, k, amp / 8);
-      liquid.kick(0.08);
-    }
-
-    // Which staves are inside a section that shows them (in screen y)?
-    function liquidBands() {
-      const out = [];
+    // Where the light goes: the pointer (with a mouse), otherwise the heading of the section in view.
+    const ptr = { x: 0, y: 0, at: -1e9 };
+    if (fine) addEventListener("pointermove", (e) => {
+      if (e.target.closest?.("[data-stage]")) { ptr.x = e.clientX; ptr.y = e.clientY; ptr.at = performance.now(); }
+    }, { passive: true });
+    const headings = ".hero-title, .pm-hero-title, .contact-title, .links-name, .nf-title, .display";
+    function headingTarget() {
+      let best = null, bd = 1e9;
       for (const sec of showing) {
         const r = sec.getBoundingClientRect();
-        const top = Math.max(0, r.top), bottom = Math.min(H, r.bottom);
-        if (bottom - top > 40) out.push([top, bottom]);
+        const d = Math.abs(r.top + r.height / 2 - view.h / 2);
+        if (d < bd) { bd = d; best = sec; }
       }
-      return out;
+      const h = best && best.querySelector(headings);
+      if (!h) return null;
+      const r = h.getBoundingClientRect();
+      return [r.left + Math.min(r.width, view.w * 0.6) * 0.5, clamp(r.top + r.height * 0.5, view.h * 0.15, view.h * 0.85)];
     }
 
-    // Where the pointer crosses a line, the line is plucked.
-    function crossings(x0, y0, x1, y1) {
-      const lo = Math.min(y0, y1) - A * 2.5, hi = Math.max(y0, y1) + A * 2.5;
-      const off = offset();
-      const J0 = Math.floor((lo + off) / P) - 1, J1 = Math.ceil((hi + off) / P) + 1;
-      const speed = Math.hypot(x1 - x0, y1 - y0);
-      let n = 0;
-      for (let J = J0; J <= J1 && n < 6; J++) {
-        for (let k = 0; k < 5 && n < 6; k++) {
-          const ya = lineY(x0, J, k, false), yb = lineY(x1, J, k, false);
-          if ((y0 - ya) * (y1 - yb) < 0) {
-            const f = Math.abs(y0 - ya) / Math.max(0.001, Math.abs(y0 - ya) + Math.abs(y1 - yb));
-            pluck(J, k, lerp(x0, x1, f), 2.5 + speed * 0.12);
-            n++;
-          }
-        }
-      }
-    }
-
-    // The nearest line to a point (for taps and clicks).
-    function nearest(x, y) {
-      const off = offset();
-      const Jc = Math.floor((y + off) / P);
-      let best = null, bd = 1e9;
-      for (let J = Jc - 1; J <= Jc + 1; J++) for (let k = 0; k < 5; k++) {
-        const d = Math.abs(lineY(x, J, k, false) - y);
-        if (d < bd) { bd = d; best = [J, k]; }
-      }
-      return bd < s * 2.5 ? best : null;
-    }
-
-    // The pointer plays the staves only over the open score: not over cards, controls or solid sections.
-    const playable = (target) => target && target.closest && target.closest("[data-liquid]") && !target.closest("a, button, input, .pm-demo, .hero-latest, .links-card, .score-hint, [role=slider]");
-
-    if (!reduce) {
-      addEventListener("pointermove", (e) => {
-        const x = e.clientX, y = e.clientY;
-        const ok = playable(e.target);
-        if (ok && ptr.inside && ptr.lx > -1e3) crossings(ptr.lx, ptr.ly, x, y);
-        ptr.x = x; ptr.y = y; ptr.lx = x; ptr.ly = y; ptr.inside = !!ok;
-      }, { passive: true });
-      addEventListener("mouseout", (e) => { if (!e.relatedTarget) ptr.inside = false; });
-      const lift = (e) => { if (e.pointerType !== "mouse") { ptr.inside = false; ptr.lx = -1e4; } };
-      addEventListener("pointerup", lift, { passive: true });
-      addEventListener("pointercancel", lift, { passive: true });
-      addEventListener("pointerdown", (e) => {
-        ptr.lx = e.clientX; ptr.ly = e.clientY;   // a new touch starts here, not where the last one ended
-        if (!playable(e.target)) return;
-        const hit = nearest(e.clientX, e.clientY);
-        if (hit) pluck(hit[0], hit[1], e.clientX, e.pointerType === "mouse" ? 6 : 7);
-      }, { passive: true });
-    }
-
-    // Now and then a short phrase writes itself onto a staff.
-    let nextPhrase = 1.2;
-    function phrase() {
-      const bands = liquidBands();
-      if (!bands.length) return;
-      const [top, bottom] = bands[Math.floor(Math.random() * bands.length)];
-      const off = offset();
-      const Ja = Math.ceil((top + off + s) / P), Jb = Math.floor((bottom + off - 5 * s) / P);
-      if (Jb < Ja) return;
-      const J = Ja + Math.floor(Math.random() * (Jb - Ja + 1));
-      const count = 3 + Math.floor(Math.random() * 4);
-      const gap = s * (3.4 + Math.random() * 1.2);
-      const width = gap * (count - 1);
-      const yMid = restY(J, 2);
-      const clear = (x) => [[x, yMid - s * 4], [x, yMid], [x, yMid + s * 4], [x + width / 2, yMid], [x + width, yMid - s * 3], [x + width, yMid + s * 3]]
-        .every(([px, py]) => {
-          const el = document.elementFromPoint(px, py);
-          return !el || el.matches("section, main, body, html, .wrap, .hero-inner, .hero-foot, .pm-grid, .contact .wrap, [data-liquid]");
-        });
-      let x0 = -1;
-      for (let i = 0; i < 6 && x0 < 0; i++) {
-        const x = W * (0.05 + Math.random() * 0.9) - width / 2;
-        if (x > 8 && x + width < W - 8 && clear(x)) x0 = x;
-      }
-      if (x0 < 0) return;
-      let pos = 2 + Math.floor(Math.random() * 5);
-      const items = [];
-      for (let i = 0; i < count; i++) {
-        pos = clamp(pos + [-2, -1, -1, 1, 1, 2, 0][Math.floor(Math.random() * 7)], 0, 8);
-        items.push({ J, pos, sx: x0 + i * gap + scoreX, t0: t + i * 0.17, life: 3.6 - i * 0.1, hot: false });
-      }
-      const up = items.reduce((a, n) => a + n.pos, 0) / items.length >= 4;
-      items.forEach((n, i) => { n.up = up; if (i % 2 === 0 && i + 1 < items.length && Math.random() < 0.6) n.beam = items[i + 1]; });
-      notes.push(...items);
-    }
-
-    // The demo plays along: its melody plucks the staves in the section it's in.
-    let lastExcite = 0;
-    api.excite = (pitch01, vel, box) => {
-      if (reduce || t - lastExcite < 0.07) return;
-      lastExcite = t;
-      const r = box ? box.closest("[data-liquid]")?.getBoundingClientRect() : null;
-      const top = r ? Math.max(0, r.top) : 0, bottom = r ? Math.min(H, r.bottom) : H;
-      if (bottom - top < 60) return;
-      const y = lerp(bottom - s * 4, top + s * 4, clamp(pitch01, 0, 1));
-      const x = W * (0.05 + Math.random() * 0.9);
-      const hit = nearest(x, y);
-      if (hit) pluck(hit[0], hit[1], x, 3 + vel * 5, { silent: true });
-    };
-
-    function noteAt(n) {
-      const x = n.sx - scoreX;
-      const k = n.pos / 2, ka = Math.floor(k), kb = Math.min(4, ka + 1);
-      const ya = lineY(x, n.J, ka, false), yb = lineY(x, n.J, kb, false);
-      return [x, ka === kb ? ya : lerp(ya, yb, k - ka)];
-    }
+    let t = 8 + Math.random() * 20, energy = 0, sway = 0, drawnOnce = false;
+    const spot = { x: view.w * 0.62, y: view.h * 0.45 };
 
     function draw() {
       if (sized !== view.version) size();
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, W, H);
-      const off = offset();
-      const J0 = Math.floor((off - A * 2) / P) - 1, J1 = Math.ceil((off + H + A * 2) / P);
-      const step = W > 900 ? 16 : 12;
-      const nearBand = s * 6;
-      ctx.lineWidth = 1;
-      ctx.lineJoin = "round";
-
-      for (let J = J0; J <= J1; J++) {
-        const yTop = restY(J, 0);
-        if (yTop > H + A * 2 || yTop + 4 * s < -A * 2) continue;
-        for (let k = 0; k < 5; k++) {
-          const by = restY(J, k);
-          let ring = 0;
-          for (const p of plucks) if (p.J === J && p.k === k) ring = Math.max(ring, Math.exp(-(t - p.t0) * 2.4));
-          const close = ptr.inside ? Math.exp(-((by - ptr.y) ** 2) / (2 * nearBand * nearBand)) * ptr.near : 0;
-          const own = plucks.filter((p) => p.J === J && p.k === k);
-          const path = new Path2D();
-          for (let x = -step, i = 0; x <= W + step; x += step, i++) {
-            const y = by + flow(x, J, k) + (own.length ? pluckY(x, J, k, own) : 0) + lean(x, by);
-            if (i === 0) path.moveTo(x, y); else path.lineTo(x, y);
-          }
-          ctx.strokeStyle = ink;
-          ctx.globalAlpha = base + close * 0.22;
-          ctx.stroke(path);
-          if (ring > 0.04) { ctx.strokeStyle = warm; ctx.globalAlpha = ring * 0.85; ctx.stroke(path); }
-        }
-        // Barlines, moving with the score.
-        const bar = s * 46;
-        ctx.strokeStyle = ink;
-        ctx.globalAlpha = base * 0.9;
-        for (let bx = ((-scoreX % bar) + bar) % bar - bar + (J * 137) % bar; bx < W + bar; bx += bar) {
-          if (bx < -2) continue;
-          ctx.beginPath();
-          ctx.moveTo(bx, lineY(bx, J, 0, true));
-          ctx.lineTo(bx, lineY(bx, J, 4, true));
-          ctx.stroke();
-        }
-      }
-
-      // Notes: written in, then fading back into the liquid.
-      for (let i = notes.length - 1; i >= 0; i--) {
-        const n = notes[i], age = t - n.t0;
-        if (age > n.life) { notes.splice(i, 1); continue; }
-        if (age < 0) continue;
-        const [x, y] = noteAt(n);
-        if (x < -40 || x > W + 40 || y < -60 || y > H + 60) continue;
-        const appear = Math.min(1, age / 0.14), vanish = clamp((n.life - age) / 0.9, 0, 1);
-        const alpha = appear * vanish * (n.hot ? 0.95 : 0.55);
-        const col = n.hot ? warm : ink;
-        ctx.globalAlpha = alpha;
-        ctx.fillStyle = col;
-        ctx.strokeStyle = col;
-        ctx.beginPath();
-        ctx.ellipse(x, y, s * 0.66 * (0.6 + 0.4 * appear), s * 0.48 * (0.6 + 0.4 * appear), -0.4, 0, Math.PI * 2);
-        ctx.fill();
-        if (n.hot) continue;
-        ctx.lineWidth = 1.2;
-        const sx = n.up ? x + s * 0.6 : x - s * 0.6, sy0 = n.up ? y - s * 0.15 : y + s * 0.15, sy1 = n.up ? y - s * 3.4 : y + s * 3.4;
-        ctx.beginPath(); ctx.moveTo(sx, sy0); ctx.lineTo(sx, sy1); ctx.stroke();
-        if (n.beam && t >= n.beam.t0) {
-          const [bx2, by2] = noteAt(n.beam);
-          const ex = n.up ? bx2 + s * 0.6 : bx2 - s * 0.6, ey = n.up ? by2 - s * 3.4 : by2 + s * 3.4;
-          ctx.lineWidth = s * 0.42;
-          ctx.beginPath(); ctx.moveTo(sx, sy1); ctx.lineTo(ex, ey); ctx.stroke();
-        }
-        ctx.lineWidth = 1;
-      }
-      ctx.globalAlpha = 1;
-      colorsDirty = false;
+      if (colorsDirty) colors();
+      gl.uniform1f(U.uT, t);
+      gl.uniform2f(U.uSpot, (spot.x / Math.max(1, view.w)) * (view.w / Math.max(1, view.h)), 1 - spot.y / Math.max(1, view.h));
+      gl.uniform1f(U.uSway, sway);
+      gl.uniform1f(U.uEnergy, energy);
+      gl.uniform1f(U.uPulse, fx.pulse);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      drawnOnce = true;
     }
 
-    let drawnOnce = false;
+    // Android can drop the GPU context when the browser goes to the background: build it again.
+    canvas.addEventListener("webglcontextlost", (e) => { e.preventDefault(); ok = false; layer.classList.remove("on"); });
+    canvas.addEventListener("webglcontextrestored", () => { ok = init(); if (ok) layer.classList.add("on"); });
+
+    ok = init();
+    if (!ok) return null;
+    layer.classList.add("on");
+
+    let slow = 0, frames = 0;
     tickers.add((now, dt) => {
-      if (reduce) {
-        if (!drawnOnce || sized !== view.version || colorsDirty) { draw(); drawnOnce = true; }
+      if (!ok) return;
+      if (reduce) {   // one still frame, the light on the first heading
+        if (!drawnOnce || sized !== view.version || colorsDirty) { const h = headingTarget(); if (h) { spot.x = h[0]; spot.y = h[1]; } draw(); }
         return;
       }
       if (!layerVisible()) return;
+      if (quality > 0.5 && ++frames > 40) {
+        slow = slow * 0.95 + (dt > 22 ? 1 : 0) * 0.05;
+        if (slow > 0.6) { quality = Math.max(0.5, quality * 0.75); slow = 0; frames = 0; sized = -1; }
+      }
       t += dt / 1000;
-      scoreX += dt * 0.012;
-      ptr.near = damp(ptr.near, ptr.inside ? 1 : 0, 6, dt);
-      for (let i = plucks.length - 1; i >= 0; i--) if (t - plucks[i].t0 > 2.6) plucks.splice(i, 1);
-      if ((nextPhrase -= dt / 1000) <= 0) { phrase(); nextPhrase = 1.8 + Math.random() * 2.2; }
+      let target = null;
+      if (fine && now - ptr.at < 4000) target = [ptr.x, ptr.y];
+      else {
+        const h = headingTarget();
+        if (h) target = [h[0] + Math.sin(t * 0.35) * view.w * 0.04, h[1] + Math.sin(t * 0.27) * view.h * 0.03];
+      }
+      if (target) { spot.x = damp(spot.x, target[0], 2.6, dt); spot.y = damp(spot.y, target[1], 2.6, dt); }
+      sway = damp(sway, Math.min(0.45, Math.abs(scroll.v) * 0.015), 3, dt);
+      energy = damp(energy, clamp(fx.level(), 0, 1), 8, dt);
+      fx.pulse = fx.pulse * Math.exp(-dt / 600);
+      if (!Number.isFinite(t)) t = 10;
       draw();
     });
-    return api;
+    return { draw };
   })();
 
   //============================================================================
@@ -1129,7 +830,7 @@ void main(){
     if (!chips.length || !ctx) return;
 
     // The audio plays as it is (no Web Audio routing, so it also plays with a phone on silent);
-    // the liquid and the staves follow the notes themselves.
+    // the spotlight follows the notes themselves.
     const audio = new Audio();
     audio.preload = "none";
     const rolls = new Map();
@@ -1160,7 +861,7 @@ void main(){
       return r;
     }
 
-    // How busy and loud the music is right now (from the notes), for the liquid.
+    // How busy and loud the music is right now (from the notes), for the spotlight.
     function energyAt(sec) {
       if (!roll) return 0;
       const ms = sec * 1000;
@@ -1174,9 +875,9 @@ void main(){
       }
       return clamp(sum / 7, 0, 1);
     }
-    liquid.level = () => (audio.paused ? 0 : energyAt(audio.currentTime || 0));
+    fx.level = () => (audio.paused ? 0 : energyAt(audio.currentTime || 0));
 
-    // Melody onsets pluck the staves around the demo.
+    // The melody's notes make the light flicker.
     function onsets(from, to) {
       if (!roll || to <= from || to - from > 0.5) return;
       const a = from * 1000, b = to * 1000, span = Math.max(1, roll.hi - roll.lo);
@@ -1184,7 +885,7 @@ void main(){
         if (tr.drum || (tr.role !== "melody" && tr.role !== "countermelody" && tr.role !== "bass")) continue;
         for (const [s0, , p, v] of tr.n) {
           if (s0 >= b) break;
-          if (s0 >= a) staves.excite((p - roll.lo) / span, v / 127, box);
+          if (s0 >= a) fx.kick(0.05 + 0.12 * v / 127);
         }
       }
     }
