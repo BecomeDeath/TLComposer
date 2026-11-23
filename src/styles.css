@@ -753,3 +753,5 @@ a:focus-visible .roll > span { transform: translateY(-100%); }
   .hero-latest, .pm-demo, .links-card, .download-card, .score-hint { background: var(--glass-solid); }
   .hero-inner { will-change: auto; }
 }
+
+.liquid.on .staves { display: none; }
