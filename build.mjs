@@ -43,35 +43,6 @@ function resolveEmbed(url) {
 }
 
 //==============================================================================
-// The piano-roll pattern behind the heroes: deterministic, drawn as one SVG.
-
-function pianoRoll(accent) {
-  let s = 1234567;
-  const rnd = () => ((s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
-  const rows = 26, w = 1600, h = 520, rowH = h / rows;
-  let bars = "";
-  let pitch = 13;
-
-  for (let x = 0; x < w;) {
-    pitch = Math.max(2, Math.min(rows - 3, pitch + Math.round((rnd() - 0.5) * 5)));
-    const len = [24, 48, 48, 72, 96, 144][Math.floor(rnd() * 6)];
-    const o = (0.25 + rnd() * 0.55).toFixed(2);
-    bars += `<rect x="${x}" y="${(pitch * rowH).toFixed(1)}" width="${len - 4}" height="${(rowH - 4).toFixed(1)}" rx="3" fill="${accent}" opacity="${o}"/>`;
-
-    if (rnd() < 0.35) {   // a chord tone under it
-      const p2 = Math.min(rows - 1, pitch + 3 + Math.floor(rnd() * 3));
-      bars += `<rect x="${x}" y="${(p2 * rowH).toFixed(1)}" width="${len - 4}" height="${(rowH - 4).toFixed(1)}" rx="3" fill="${accent}" opacity="${(o * 0.6).toFixed(2)}"/>`;
-    }
-
-    x += len + (rnd() < 0.2 ? 24 : 0);
-  }
-
-  let grid = "";
-  for (let x = 0; x <= w; x += 192) grid += `<line x1="${x}" y1="0" x2="${x}" y2="${h}" />`;
-  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid slice"><g class="roll-grid">${grid}</g>${bars}</svg>`;
-}
-
-//==============================================================================
 
 function warnings(site) {
   const out = [];
@@ -96,8 +67,6 @@ export function build({ quiet = false } = {}) {
     r.embedResolved = resolveEmbed(r.embed);
     if (r.embed && !r.embedResolved && !quiet) console.warn(`  ! ${r.title}: can't make a player from ${r.embed}`);
   }
-
-  site.pianoRoll = pianoRoll(site.site.accent || "#7d6ff7");
 
   rmSync(dist, { recursive: true, force: true });
   mkdirSync(dist, { recursive: true });
@@ -147,7 +116,7 @@ if (process.argv.includes("--serve")) {
   const port = Number(process.env.PORT || 4321);
   const types = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": "text/javascript", ".svg": "image/svg+xml",
                   ".png": "image/png", ".jpg": "image/jpeg", ".webp": "image/webp", ".woff2": "font/woff2", ".mp3": "audio/mpeg",
-                  ".xml": "application/xml", ".txt": "text/plain" };
+                  ".xml": "application/xml", ".txt": "text/plain", ".json": "application/json" };
 
   createServer((req, res) => {
     let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
