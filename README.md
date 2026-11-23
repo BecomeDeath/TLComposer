@@ -6,14 +6,14 @@ It's a static site with no build dependencies: a small Node script turns `site.j
 
 ## What moves
 
-- **The living score**: the liquid itself is the score. A dark ink streams sideways behind the hero, PromptMIDI and contact sections, and the staves of an orchestral score are strands of that same liquid, bending with the current and catching its light. Notes form in it as droplets and dissolve again, and every note sends ripples across the surface. Sweep across the staves with the mouse (or tap them on a phone) to pluck them: the strand rings, a note forms where you touched, and with sound on each staff plays like a section of the orchestra (flutes at the top, cellos at the bottom). Short phrases form on their own now and then, and the staves play along with the PromptMIDI demo. Without WebGL the score is drawn on a 2D canvas over soft CSS gradients.
+- **The stage**: behind the hero, PromptMIDI and contact sections hangs a red velvet curtain in deep folds, lit by one spotlight with dust drifting in its beam (WebGL). The light follows the pointer; on phones, and whenever the pointer rests, it finds the heading of the section you're reading. The curtain sways as the page moves, and the light swells with the PromptMIDI demo's music. Without WebGL it falls back to velvet stripes and a pool of light in CSS.
 - **Smooth scrolling** with a mouse or trackpad ([Lenis](https://github.com/darkroomengineering/lenis), in `assets/vendor/`); phones keep their own native scrolling. Headings rise word by word, the About statement lights up as you read it, the latest release grows to full width, a marquee speeds up with your scroll.
 - **Interaction**: a notehead cursor (it fills and grows a stem over links), magnetic buttons, button fills that grow from the pointer, work titles that show their cover as a liquid preview, videos in a lightbox, a curtain with a staff between pages, a count-in on the first visit.
 - **Sections are named like movements**: I. Prelude, II. Theme, III. Variations, IV. Interlude, V. Coda.
 - **The PromptMIDI demo**: each example's real notes, drawn in time with its audio. Pick a prompt, press Play.
-- **Sound** is off by default; the switch is in the header and in the hero.
+- **Sound** is off by default; with it on, hovering links plays soft notes. The switch is in the header.
 
-Without WebGL the liquid falls back to soft CSS gradients; slow devices get a lower resolution automatically. Everything still works without JavaScript, and visitors who prefer reduced motion get a still page with the same content.
+Slow devices get a lower resolution automatically. Everything still works without JavaScript, and visitors who prefer reduced motion get a still page with the same content.
 
 ## Editing
 

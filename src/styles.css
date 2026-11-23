@@ -28,11 +28,11 @@
   --glass: rgba(20, 11, 13, 0.58);
   --on-fg: #0b0708;
 
-  /* The liquid: base, deep velvet, red, gold. */
-  --liquid-0: #070405;
-  --liquid-1: #2a070d;
-  --liquid-2: #7a1424;
-  --liquid-3: #e2b25a;
+  /* The stage: darkness, deep velvet, red velvet, the spotlight's gold. */
+  --stage-0: #070405;
+  --stage-1: #2a070d;
+  --stage-2: #7a1424;
+  --stage-3: #e2b25a;
 
   /* Piano-roll colours by role. */
   --roll-melody: #f0c06a;
@@ -76,10 +76,10 @@
   --glass: rgba(246, 240, 231, 0.62);
   --on-fg: #f6f0e7;
 
-  --liquid-0: #f6f0e7;
-  --liquid-1: #ecd5cc;
-  --liquid-2: #c47a83;
-  --liquid-3: #d9a441;
+  --stage-0: #f6f0e7;
+  --stage-1: #ecd5cc;
+  --stage-2: #c47a83;
+  --stage-3: #d9a441;
 
   --roll-melody: #a8721c;
   --roll-counter: #7d5a22;
@@ -145,21 +145,22 @@ html.lenis, html.lenis body { height: auto; }
 .lenis .lightbox iframe { pointer-events: auto; }
 
 /*==============================================================================
-  The liquid: one fixed WebGL canvas behind the page; sections marked .solid cover it. */
+  The stage: one fixed WebGL canvas behind the page (a velvet curtain, a spotlight, dust in
+  the beam); sections marked .solid cover it. */
 
-.liquid { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 100lvh; z-index: 0; pointer-events: none; background: var(--liquid-0); overflow: hidden; }
-.liquid canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
-.liquid-gl { opacity: 0; transition: opacity 1.2s var(--ease); }
-.liquid.on .liquid-gl { opacity: 1; }
-.liquid-fallback { position: absolute; inset: 0; overflow: hidden; filter: blur(60px) saturate(130%); opacity: 0.9; }
-.liquid.on .liquid-fallback { display: none; }
-.liquid-fallback i { position: absolute; width: 60vmax; height: 60vmax; border-radius: 50%; mix-blend-mode: screen; animation: drift 26s ease-in-out infinite alternate; }
-.liquid-fallback i:nth-child(1) { background: var(--liquid-1); left: -15vmax; top: -20vmax; }
-.liquid-fallback i:nth-child(2) { background: var(--liquid-2); right: -25vmax; top: 10vmax; opacity: 0.55; animation-duration: 32s; }
-.liquid-fallback i:nth-child(3) { background: var(--liquid-3); left: 20vmax; bottom: -40vmax; opacity: 0.25; animation-duration: 38s; }
-[data-theme="light"] .liquid-fallback i { mix-blend-mode: multiply; }
-@keyframes drift { to { transform: translate3d(10vmax, 6vmax, 0) scale(1.15); } }
-.reduce .liquid-fallback i { animation: none; }
+.stage { position: fixed; left: 0; top: 0; width: 100%; height: 100vh; height: 100lvh; z-index: 0; pointer-events: none; background: var(--stage-0); overflow: hidden; }
+.stage canvas { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.stage-gl { opacity: 0; transition: opacity 1.2s var(--ease); }
+.stage.on .stage-gl { opacity: 1; }
+/* Without WebGL: velvet folds and a pool of light in CSS. */
+.stage-fallback {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(40vmax 30vmax at 62% 48%, color-mix(in srgb, var(--stage-3) 22%, transparent), transparent 70%),
+    repeating-linear-gradient(90deg, var(--stage-1) 0 3vw, var(--stage-2) 4.5vw, var(--stage-1) 6vw);
+  opacity: 0.85;
+}
+.stage.on .stage-fallback { display: none; }
 
 main, .site-footer { position: relative; z-index: 1; }
 .solid { background: var(--bg); position: relative; }
@@ -392,20 +393,6 @@ a:focus-visible .roll > span { transform: translateY(-100%); }
 .js:not(.reduce) .ready .hero-title .c, .js:not(.reduce).ready .hero-title .c { transform: none; }
 .js:not(.reduce):not(.ready) .hero [data-reveal] { opacity: 0; transform: translate3d(0, 28px, 0); }
 .hero-foot { display: flex; align-items: flex-end; justify-content: space-between; gap: 2rem; margin-top: clamp(1.5rem, 3vw, 2.5rem); }
-.hero-foot-left { display: grid; gap: 1.1rem; justify-items: start; }
-.score-hint {
-  display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.55rem 1rem 0.55rem 0.6rem; border-radius: 999px;
-  border: 1px solid var(--line); background: var(--glass); font-size: 0.82rem; color: var(--muted); transition: color 0.3s, border-color 0.3s, background-color 0.3s;
-}
-.score-hint-icon { display: grid; place-items: center; width: 1.9rem; height: 1.9rem; border-radius: 50%; background: var(--fg); color: var(--bg); transition: background-color 0.3s, transform 0.5s var(--ease-elastic); }
-.score-hint-icon svg { width: 1.05rem; height: 1.05rem; }
-.score-hint .when-on, .sound-on .score-hint .when-off { display: none; }
-.sound-on .score-hint .when-on { display: inline; }
-.sound-on .score-hint { color: var(--fg); border-color: var(--line-strong); }
-.sound-on .score-hint-icon { background: var(--warm); color: #1a1208; animation: bob 1.2s var(--ease) infinite alternate; }
-@keyframes bob { to { transform: translateY(-2px) rotate(-6deg); } }
-.reduce .score-hint-icon { animation: none !important; }
-.no-js .score-hint { display: none; }
 .hero-intro { max-width: 34ch; color: color-mix(in srgb, var(--fg) 76%, transparent); font-size: 1.02rem; }
 .hero-latest { display: flex; align-items: center; gap: 1rem; padding: 0.55rem 1.4rem 0.55rem 0.55rem; border-radius: 18px; background: var(--glass); border: 1px solid var(--line); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); transition: border-color 0.4s, transform 0.6s var(--ease), opacity 1s var(--ease); }
 @media (hover: hover) { .hero-latest:hover { border-color: var(--line-strong); } }
@@ -753,9 +740,8 @@ a:focus-visible .roll > span { transform: translateY(-100%); }
 
 @media (hover: none), (pointer: coarse) {
   .scrolled .site-header { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--header-solid); }
-  .hero-latest, .pm-demo, .links-card, .download-card, .score-hint, .showcase-play { backdrop-filter: none; -webkit-backdrop-filter: none; }
-  .hero-latest, .pm-demo, .links-card, .download-card, .score-hint { background: var(--glass-solid); }
+  .hero-latest, .pm-demo, .links-card, .download-card, .showcase-play { backdrop-filter: none; -webkit-backdrop-filter: none; }
+  .hero-latest, .pm-demo, .links-card, .download-card { background: var(--glass-solid); }
   .hero-inner { will-change: auto; }
 }
 
-.liquid.on .staves { display: none; }

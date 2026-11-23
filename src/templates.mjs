@@ -174,9 +174,9 @@ function footer(site) {
 </footer>`;
 }
 
-/** The fixed layers every page shares: the liquid canvas, cursor, page curtain, video lightbox. */
+/** The fixed layers every page shares: the stage (curtain and spotlight), cursor, page curtain, video lightbox. */
 function chrome() {
-  return `<div class="liquid" aria-hidden="true"><div class="liquid-fallback"><i></i><i></i><i></i></div><canvas class="liquid-gl"></canvas><canvas class="staves"></canvas></div>
+  return `<div class="stage" aria-hidden="true"><div class="stage-fallback"></div><canvas class="stage-gl"></canvas></div>
 <div class="cursor" aria-hidden="true"><div class="cursor-ring"><span class="cursor-label"></span></div><div class="cursor-dot"></div></div>
 <div class="curtain" aria-hidden="true"><span class="curtain-staff"></span><span class="curtain-mark"></span></div>
 <dialog class="lightbox" aria-label="Video">
@@ -279,7 +279,7 @@ export function homePage(site) {
   const chars = (s) => esc(s).split("").map((c) => (c === " " ? " " : `<span class="c">${c}</span>`)).join("");
 
   const body = `
-<section class="hero" id="top" data-liquid>
+<section class="hero" id="top" data-stage>
   <div class="hero-inner" data-hero>
     <p class="hero-eyebrow" data-reveal><span>${esc(a.tagline.replace(/\.$/, ""))}</span></p>
     <h1 class="hero-title" aria-label="${esc(a.name)}">
@@ -287,13 +287,7 @@ export function homePage(site) {
       ${rest.length ? `<span class="hero-line hero-line-2" aria-hidden="true"><em>${chars(rest.join(" "))}</em></span>` : ""}
     </h1>
     <div class="hero-foot">
-      <div class="hero-foot-left">
-        ${text(a.intro) ? `<p class="hero-intro" data-reveal>${esc(a.intro)}</p>` : ""}
-        <button class="score-hint" type="button" aria-pressed="false" data-sound-toggle data-reveal>
-          <span class="score-hint-icon">${icon.note}</span>
-          <span class="score-hint-text"><span class="when-off">Turn on sound, then sweep across the staves</span><span class="when-on">Sound on · sweep across the staves</span></span>
-        </button>
-      </div>
+      ${text(a.intro) ? `<p class="hero-intro" data-reveal>${esc(a.intro)}</p>` : ""}
       ${featured ? `<a class="hero-latest" href="${esc(ft.href)}" target="_blank" rel="noopener"${ft.video ? ` data-video="${esc(ft.video)}" data-title="${esc(featured.title)}"` : ""} data-cursor="Play" data-reveal data-sound>
         <span class="hero-latest-media">${cover({ ...featured, wide: true }, "hero-latest-img", { lazy: false })}<span class="hero-latest-play">${icon.play}</span></span>
         <span class="hero-latest-text"><span class="label">Latest release</span><strong>${esc(featured.title)}</strong></span>
@@ -361,7 +355,7 @@ ${featured ? `<section class="showcase solid" id="work" aria-labelledby="showcas
 
 <div class="marquee solid" aria-hidden="true"><div class="marquee-track">${Array(2).fill(`<span class="marquee-group">${(site.marquee || []).map((w, i) => `<span class="${i % 2 ? "it" : ""}">${esc(w)}</span><i>${icon.note}</i>`).join("")}</span>`).join("")}</div></div>
 
-<section class="section pm" id="promptmidi" aria-labelledby="pm-h" data-liquid>
+<section class="section pm" id="promptmidi" aria-labelledby="pm-h" data-stage>
   <div class="wrap pm-grid">
     <div class="pm-copy">
       ${label(4, "Interlude", "Free plug-in")}
@@ -378,7 +372,7 @@ ${featured ? `<section class="showcase solid" id="work" aria-labelledby="showcas
   </div>
 </section>
 
-<section class="section contact" id="contact" aria-labelledby="contact-h" data-liquid>
+<section class="section contact" id="contact" aria-labelledby="contact-h" data-stage>
   <div class="wrap">
     ${label(5, "Coda", "Contact")}
     ${split("h2", esc(text(site.contact.heading, "Get in touch")), { cls: "contact-title display", id: "contact-h" })}
@@ -412,7 +406,7 @@ ${featured ? `<section class="showcase solid" id="work" aria-labelledby="showcas
 export function promptmidiPage(site) {
   const p = site.promptmidi;
   const body = `
-<section class="pm-hero" data-liquid>
+<section class="pm-hero" data-stage>
   <div class="wrap">
     <p class="label" data-reveal>${mark} Free · VST3, AU and standalone</p>
     ${split("h1", esc(p.name), { cls: "pm-hero-title", mode: "chars" })}
@@ -466,7 +460,7 @@ export function promptmidiPage(site) {
   </div>
 </section>
 
-<section class="section download" id="download" aria-labelledby="download-h" data-liquid>
+<section class="section download" id="download" aria-labelledby="download-h" data-stage>
   <div class="wrap">
     <div class="section-head">
       ${label(4, "Finale", "Download")}
@@ -523,7 +517,7 @@ export function linksPage(site) {
   ];
 
   const body = `
-<section class="links-page" data-liquid>
+<section class="links-page" data-stage>
   <div class="links-card">
     <a class="links-brand" href="index.html"><span class="brand-mark">${esc(initials(a.name))}</span></a>
     <h1 class="links-name">${esc(a.name)}</h1>
@@ -557,7 +551,7 @@ export function notFoundPage(site) {
     path: "404.html",
     current: "",
     bodyClass: "page-404",
-    body: `<section class="nf" data-liquid><div class="wrap">
+    body: `<section class="nf" data-stage><div class="wrap">
       <p class="label">Error 404</p>
       ${split("h1", "Lost in the <em>score</em>.", { cls: "nf-title display" })}
       <p class="lead">This page isn't here. It may have moved.</p>
