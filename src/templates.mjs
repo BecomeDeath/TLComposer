@@ -41,6 +41,9 @@ export const icon = {
   close: stroke("m6 6 12 12M18 6 6 18"),
   sun: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
   moon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 14.5A7.5 7.5 0 0 1 9.5 4.5a7.5 7.5 0 1 0 10 10z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  // An eighth note and a quarter note, drawn for this site.
+  note: '<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="8.6" cy="17.6" rx="4.4" ry="3.2" transform="rotate(-24 8.6 17.6)" fill="currentColor"/><path d="M12.2 17.2V3.2h1.5c.4 2.3 2 3.4 3.4 4.7 1.7 1.6 2.3 3.8 1.4 6.4-.1-2.4-1.3-4.1-3.6-4.9-.4-.1-.8-.2-1.2-.2v8z" fill="currentColor"/></svg>',
+  quarter: '<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="9" cy="17.6" rx="4.6" ry="3.3" transform="rotate(-24 9 17.6)" fill="currentColor"/><rect x="12.7" y="3" width="1.5" height="14.6" fill="currentColor"/></svg>',
   spark: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7z" fill="currentColor"/></svg>',
   check: stroke("m5 12.5 4.5 4.5L19 7.5", 1.8),
 };
@@ -97,7 +100,11 @@ function emailLink(email, cls, inner, attrs = "") {
 const split = (tag, html, { cls = "", id = "", mode = "words" } = {}) =>
   `<${tag}${id ? ` id="${id}"` : ""} class="${cls}" data-split="${mode}">${html}</${tag}>`;
 
-const label = (n, s) => `<p class="label"><span class="label-n">(${pad2(n)})</span> ${esc(s)}</p>`;
+const roman = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
+
+/** A section label, named like a movement: "I. Prelude — About". */
+const label = (n, movement, s) =>
+  `<p class="label"><span class="label-n">${roman[n]}.</span><span class="label-mvt">${esc(movement)}</span><span class="label-sep" aria-hidden="true"></span><span>${esc(s)}</span></p>`;
 
 function nav(current) {
   return [
@@ -121,7 +128,7 @@ function header(site, current) {
     <ul>${items.map((i) => `<li><a href="${i.href}"${i.current ? ' aria-current="page"' : ""} data-sound>${roll(i.name)}</a></li>`).join("")}</ul>
   </nav>
   <div class="header-tools">
-    <button class="sound-toggle" type="button" aria-pressed="false" title="Interface sounds" data-magnetic="0.3">
+    <button class="sound-toggle" type="button" aria-pressed="false" title="Sound" data-sound-toggle data-magnetic="0.3">
       <span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span class="sound-label">Sound <span class="sound-state">off</span></span>
     </button>
     <button class="icon-button theme-toggle" type="button" aria-label="Switch between dark and light" data-magnetic="0.3">${icon.sun}${icon.moon}</button>
@@ -162,16 +169,16 @@ function footer(site) {
   <div class="footer-word" aria-hidden="true"><span data-speed="-0.08">${esc(a.name)}</span></div>
   <div class="wrap footer-bottom">
     <span>© ${year} ${esc(a.name)}</span>
-    <span>Made in ${esc(a.location || "Denmark")}</span>
+    <span class="fine">Made in ${esc(a.location || "Denmark")} <em title="Fine: the end of the piece">Fine</em><i class="final-bar" aria-hidden="true"></i></span>
   </div>
 </footer>`;
 }
 
 /** The fixed layers every page shares: the liquid canvas, cursor, page curtain, video lightbox. */
 function chrome() {
-  return `<div class="liquid" aria-hidden="true"><canvas></canvas><div class="liquid-fallback"><i></i><i></i><i></i></div></div>
+  return `<div class="liquid" aria-hidden="true"><div class="liquid-fallback"><i></i><i></i><i></i></div><canvas class="liquid-gl"></canvas><canvas class="staves"></canvas></div>
 <div class="cursor" aria-hidden="true"><div class="cursor-ring"><span class="cursor-label"></span></div><div class="cursor-dot"></div></div>
-<div class="curtain" aria-hidden="true"><span class="curtain-mark"></span></div>
+<div class="curtain" aria-hidden="true"><span class="curtain-staff"></span><span class="curtain-mark"></span></div>
 <dialog class="lightbox" aria-label="Video">
   <div class="lightbox-frame"></div>
   <p class="lightbox-title"></p>
@@ -207,20 +214,20 @@ ${ogImage ? `<meta property="og:image" content="${esc(ogImage)}"><meta name="twi
 <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="assets/fonts/instrument-serif.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/inter-regular.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=${site.assetVersion || 1}">
 <script>(function(d){var r=d.documentElement,m=matchMedia("(prefers-reduced-motion: reduce)").matches,pt=false,seen=true;r.className="js"+(m?" reduce":"");try{var t=localStorage.getItem("theme");r.dataset.theme=t||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark")}catch(e){}try{pt=!!sessionStorage.getItem("pt");sessionStorage.removeItem("pt");seen=!!sessionStorage.getItem("seen")}catch(e){}if(pt&&!m)r.classList.add("pt-in");if(${loader ? "seen||m||pt" : "true"})r.classList.add("no-loader")})(document)</script>
 ${jsonLd ? `<script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, "\\u003c")}</script>` : ""}
 </head>
 <body class="${bodyClass}">
-${loader ? `<div class="loader" aria-hidden="true"><div class="loader-name">${esc(site.artist.name).split("").map((c, i) => `<span style="--i:${i}">${c === " " ? "&nbsp;" : c}</span>`).join("")}</div><div class="loader-count"><span>000</span></div></div>` : ""}
+${loader ? `<div class="loader" aria-hidden="true"><div class="loader-name">${esc(site.artist.name).split("").map((c, i) => `<span style="--i:${i}">${c === " " ? "&nbsp;" : c}</span>`).join("")}</div><div class="loader-staff"><i></i><i></i><i></i><i></i><i></i></div><div class="loader-count"><span class="loader-tempo">${icon.quarter}<span>= 160</span></span><span class="beat">1</span><span class="beat">2</span><span class="beat">3</span><span class="beat">4</span></div></div>` : ""}
 ${chrome()}
 ${bare ? "" : header(site, current)}
 <main id="main">
 ${body}
 </main>
 ${bare ? "" : footer(site)}
-<script src="assets/vendor/lenis.min.js" defer></script>
-<script src="main.js" defer></script>
+<script src="assets/vendor/lenis.min.js?v=${site.assetVersion || 1}" defer></script>
+<script src="main.js?v=${site.assetVersion || 1}" defer></script>
 </body>
 </html>
 `;
@@ -280,7 +287,13 @@ export function homePage(site) {
       ${rest.length ? `<span class="hero-line hero-line-2" aria-hidden="true"><em>${chars(rest.join(" "))}</em></span>` : ""}
     </h1>
     <div class="hero-foot">
-      ${text(a.intro) ? `<p class="hero-intro" data-reveal>${esc(a.intro)}</p>` : ""}
+      <div class="hero-foot-left">
+        ${text(a.intro) ? `<p class="hero-intro" data-reveal>${esc(a.intro)}</p>` : ""}
+        <button class="score-hint" type="button" aria-pressed="false" data-sound-toggle data-reveal>
+          <span class="score-hint-icon">${icon.note}</span>
+          <span class="score-hint-text"><span class="when-off">Turn on sound, then sweep across the staves</span><span class="when-on">Sound on · sweep across the staves</span></span>
+        </button>
+      </div>
       ${featured ? `<a class="hero-latest" href="${esc(ft.href)}" target="_blank" rel="noopener"${ft.video ? ` data-video="${esc(ft.video)}" data-title="${esc(featured.title)}"` : ""} data-cursor="Play" data-reveal data-sound>
         <span class="hero-latest-media">${cover({ ...featured, wide: true }, "hero-latest-img", { lazy: false })}<span class="hero-latest-play">${icon.play}</span></span>
         <span class="hero-latest-text"><span class="label">Latest release</span><strong>${esc(featured.title)}</strong></span>
@@ -293,7 +306,7 @@ export function homePage(site) {
 <section class="section about solid fade-in" id="about" aria-labelledby="about-h">
   <div class="wrap about-grid">
     <div class="about-side">
-      ${label(1, "About")}
+      ${label(1, "Prelude", "About")}
       <h2 id="about-h" class="visually-hidden">About</h2>
     </div>
     <div class="about-main">
@@ -311,7 +324,7 @@ export function homePage(site) {
 </section>
 
 ${featured ? `<section class="showcase solid" id="work" aria-labelledby="showcase-h">
-  <div class="wrap showcase-head">${label(2, "Latest release")}</div>
+  <div class="wrap showcase-head">${label(2, "Theme", "Latest release")}</div>
   <a class="showcase-frame" href="${esc(ft.href)}" target="_blank" rel="noopener"${ft.video ? ` data-video="${esc(ft.video)}" data-title="${esc(featured.title)}"` : ""} data-cursor="Play" data-showcase>
     <span class="showcase-media">${cover({ ...featured, wide: true }, "showcase-img", { sizes: "100vw" })}</span>
     <span class="showcase-shade" aria-hidden="true"></span>
@@ -326,14 +339,14 @@ ${featured ? `<section class="showcase solid" id="work" aria-labelledby="showcas
 <section class="section works solid" id="music" aria-labelledby="music-h">
   <div class="wrap">
     <div class="section-head">
-      ${label(3, "Selected works")}
+      ${label(3, "Variations", "Selected works")}
       ${split("h2", esc(m.heading || "Music"), { cls: "display", id: "music-h" })}
       ${text(m.intro) ? `<p class="section-intro" data-reveal>${esc(m.intro)}</p>` : ""}
     </div>
     <ol class="works-list">${releases.map((r, i) => {
       const t = releaseTarget(r);
       return `<li data-reveal style="--i:${i}"><a class="work" href="${esc(t.href)}" target="_blank" rel="noopener"${t.video ? ` data-video="${esc(t.video)}" data-title="${esc(r.title)}"` : ""}${safeUrl(r.cover) ? ` data-image="${esc(safeUrl(r.cover))}"` : ""} data-cursor="Play" data-sound>
-        <span class="work-index">${pad2(i + 1)}</span>
+        <span class="work-index">No. ${i + 1}</span>
         <span class="work-title">${esc(r.title)}</span>
         <span class="work-type">${esc(r.type || "")}</span>
         <span class="work-go" aria-hidden="true">${icon.play}</span>
@@ -346,12 +359,12 @@ ${featured ? `<section class="showcase solid" id="work" aria-labelledby="showcas
   <div class="work-preview" aria-hidden="true"><div class="work-preview-inner"></div></div>
 </section>
 
-<div class="marquee solid" aria-hidden="true"><div class="marquee-track">${Array(2).fill(`<span class="marquee-group">${(site.marquee || []).map((w, i) => `<span class="${i % 2 ? "it" : ""}">${esc(w)}</span><i>${icon.spark}</i>`).join("")}</span>`).join("")}</div></div>
+<div class="marquee solid" aria-hidden="true"><div class="marquee-track">${Array(2).fill(`<span class="marquee-group">${(site.marquee || []).map((w, i) => `<span class="${i % 2 ? "it" : ""}">${esc(w)}</span><i>${icon.note}</i>`).join("")}</span>`).join("")}</div></div>
 
 <section class="section pm" id="promptmidi" aria-labelledby="pm-h" data-liquid>
   <div class="wrap pm-grid">
     <div class="pm-copy">
-      ${label(4, "Free plug-in")}
+      ${label(4, "Interlude", "Free plug-in")}
       ${split("h2", esc(p.name), { cls: "display", id: "pm-h" })}
       <p class="lead" data-reveal>${esc(p.tagline)}</p>
       <p class="muted" data-reveal>${esc(p.summary)}</p>
@@ -367,7 +380,7 @@ ${featured ? `<section class="showcase solid" id="work" aria-labelledby="showcas
 
 <section class="section contact" id="contact" aria-labelledby="contact-h" data-liquid>
   <div class="wrap">
-    ${label(5, "Contact")}
+    ${label(5, "Coda", "Contact")}
     ${split("h2", esc(text(site.contact.heading, "Get in touch")), { cls: "contact-title display", id: "contact-h" })}
     <p class="lead" data-reveal>${esc(site.contact.note)}</p>
     ${email ? `<div class="contact-email-wrap" data-reveal>${emailLink(email, "contact-email", (t) => `${t}<span class="contact-email-arrow">${icon.arrow}</span>`, 'data-magnetic="0.15" data-cursor="Write"')}</div>` : ""}
@@ -414,7 +427,7 @@ export function promptmidiPage(site) {
 
 <section class="section solid fade-in" aria-labelledby="intro-h">
   <div class="wrap about-grid">
-    <div class="about-side">${label(1, "What it is")}</div>
+    <div class="about-side">${label(1, "Overture", "What it is")}</div>
     <div class="about-main">
       <h2 id="intro-h" class="visually-hidden">What it is</h2>
       <p class="statement" data-words>${esc(text(p.statement, p.tagline))}</p>
@@ -425,7 +438,7 @@ export function promptmidiPage(site) {
 <section class="section solid" aria-labelledby="features-h">
   <div class="wrap">
     <div class="section-head">
-      ${label(2, "Features")}
+      ${label(2, "Themes", "Features")}
       ${split("h2", "What it does", { cls: "display", id: "features-h" })}
     </div>
     <ul class="features">${p.features.map((f, i) => `<li class="feature spot" data-reveal style="--i:${i % 3}">
@@ -439,7 +452,7 @@ export function promptmidiPage(site) {
 <section class="section solid" aria-labelledby="how-h">
   <div class="wrap how">
     <div class="how-side">
-      ${label(3, "How it works")}
+      ${label(3, "Development", "How it works")}
       ${split("h2", "Three steps", { cls: "display", id: "how-h" })}
     </div>
     <ol class="steps">${p.steps.map((s, i) => `<li class="step" data-reveal>
@@ -456,7 +469,7 @@ export function promptmidiPage(site) {
 <section class="section download" id="download" aria-labelledby="download-h" data-liquid>
   <div class="wrap">
     <div class="section-head">
-      ${label(4, "Download")}
+      ${label(4, "Finale", "Download")}
       ${split("h2", "Get PromptMIDI", { cls: "display", id: "download-h" })}
       <p class="section-intro" data-reveal>${esc(p.requirements)}</p>
     </div>
@@ -472,7 +485,7 @@ export function promptmidiPage(site) {
 <section class="section solid fade-in" aria-labelledby="faq-h">
   <div class="wrap how">
     <div class="how-side">
-      ${label(5, "Questions")}
+      ${label(5, "Coda", "Questions")}
       ${split("h2", "FAQ", { cls: "display", id: "faq-h" })}
     </div>
     <div class="faq">${p.faq.map((f) => `<details data-reveal><summary data-sound><span>${esc(f.q)}</span><i aria-hidden="true"></i></summary><div class="faq-a"><p>${esc(f.a)}</p></div></details>`).join("")}</div>

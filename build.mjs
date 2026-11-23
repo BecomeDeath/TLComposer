@@ -5,6 +5,7 @@
 //   node build.mjs --serve    build, then serve dist/ on http://localhost:4321 (rebuilds on each page load)
 
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -67,6 +68,13 @@ export function build({ quiet = false } = {}) {
     r.embedResolved = resolveEmbed(r.embed);
     if (r.embed && !r.embedResolved && !quiet) console.warn(`  ! ${r.title}: can't make a player from ${r.embed}`);
   }
+
+  // A version tag from the CSS and scripts, so browsers never pair a new page with an old cached file.
+  site.assetVersion = createHash("sha1")
+    .update(readFileSync(join(root, "src", "styles.css")))
+    .update(readFileSync(join(root, "src", "main.js")))
+    .update(readFileSync(join(root, "assets", "vendor", "lenis.min.js")))
+    .digest("hex").slice(0, 10);
 
   rmSync(dist, { recursive: true, force: true });
   mkdirSync(dist, { recursive: true });
